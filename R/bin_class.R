@@ -10,6 +10,8 @@ bin <- setRefClass("bin",
 
 ## TODO: remove the x, y, w from the function call and reference via .self!
 
+## implement each function without this method inheritance B.S.
+
 ## create a generic method here
 setGeneric("Bin",
   function(.self, x, y, w, min.iv=0.01, min.cnt=10, min.res=0, max.bin=10, mono=0, exceptions=numeric(0)) {
@@ -22,17 +24,24 @@ setGeneric("Bin",
 bin$methods("Bin" = Bin)
 
 continuous <- setRefClass("continuous",
+  contains = "bin",
   fields = c(cuts = "numeric"),
-  contains = "bin")
+  methods = list(Bin = function(x, y, w=1, min.iv=0.01, min.cnt=10, min.res=0, max.bin=10, mono=0, exceptions=numeric(0)) {
+    browser()
+    callSuper(x, y, w=1, min.iv=0.01, min.cnt=10, min.res=0, max.bin=10, mono=0, exceptions=numeric(0))
+  })
+)
 
 discrete <- setRefClass("discrete",
   fields = c(map = "list"),
   contains = "bin")
 
 
+
 setMethod("Bin",
-  signature = c("bin", "ValidBinType", "numeric"),
+  signature = c(.self="bin", x="ValidBinType", y="numeric", w="numeric"),
   function(.self, x, y, w, min.iv=0.01, min.cnt=10, min.res=0, max.bin=10, mono=0, exceptions=numeric(0)) {
+    print("In the superclass finally!")
     w <- rep(1, length(x))
     callGeneric(.self=.self, x=x, y=y, w=w, name=name, min.iv=min.iv, min.cnt=min.cnt,
       min.res=min.res, max.bin=max.bin, mono=mono, exceptions=exceptions, ...)
@@ -42,7 +51,7 @@ setMethod("Bin",
 setMethod("Bin",
   signature = c("continuous", "numeric", "numeric", "numeric"),
   function(.self, x, y, w, min.iv=0.01, min.cnt=10, min.res=0, max.bin=10, mono=0, exceptions=numeric(0)) {
-
+    print("In Bin Continuous")
     f <- !is.na(x)
     cuts <- .Call("bin", as.double(x[f]), as.double(y[f]), as.double(w[f]),
       as.double(min.iv), as.integer(min.cnt), as.integer(min.res),
