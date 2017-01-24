@@ -1,10 +1,12 @@
 setClassUnion("NULLnumeric", c("NULL", "numeric"))
 
+setGeneric("update_", def = function(.self, ..., b) callGeneric("update_"))
+
 ## create a transform object that applies the transoformation to a variable
 setClass("Transform", slots = c(
   tf = "ANY",
-  woe = "numeric",
-  pred = "numeric",
+  value = "numeric",
+  subst = "numeric",
   nas = "numeric",
   exceptions = "list")
 )
@@ -15,27 +17,30 @@ setMethod("initialize", "Transform", function(.Object, ...) {
   .Object
 })
 
-setClass("Performance", slots = c(
+Performance <- setRefClass("Performance", fields = c(
   y = "numeric",
   w = "numeric"),
   contains = "VIRTUAL")
 
-setMethod("initialize", "Performance", function(.Object, y, ..., w=rep(1, length(y))) {
-  .Object@w <- w
-  .Object@y <- y
-  validObject(.Object)
-  .Object
+Performance$methods(initialize = function(y, ..., w=rep(1, length(y))) {
+  callSuper(y=y, w=w, ...)
+  stopifnot(!any(is.na(y)))
+  stopifnot(length(y) == length(w))
 })
 
-setClass("Binary_Performance", slots = c(
+Binary_Performance <- setRefClass("Binary_Performance", fields = c(
   ones = "numeric",
   zeros = "numeric"),
-contains = "Performance")
+  contains = "Performance")
 
-setMethod("initialize", "Binary_Performance", function(.Object, y, ...) {
-  browser()
-  .Object <- callNextMethod(.Object, y=y, ...)
-  .Object
+Binary_Performance$methods(initialize =  function(y, ...) {
+  callSuper(y=y, ...)
+  ones <<- sum((y == 1) * w)
+  zeros <<- sum((y == 0) * w)
+})
+
+Binary_Performance$methods(summarize = function(x, f) {
+  ## TODO: Implement
 })
 
 
@@ -46,28 +51,15 @@ Bin <- setRefClass("Bin",
   fields = c(
     name = "character",
     perf = "Performance",
-    # y = "numeric",
-    # w = "NULLnumeric",
     tf = "Transform",
     history = "list"),
   contains = "VIRTUAL")
 
-# Bin$methods(initialize = function(name="Unknown", x, y, w=rep(1, length(x)), ...) {
-#   ## perform bin checks here
-#   stopifnot(length(x) > 0)
-#   stopifnot(length(x) == length(y))
-#   stopifnot(length(x) == length(w))
-#   stopifnot(!any(is.na(y)))
-#   callSuper(name=name, x=x, y=y, w=w, ...)
-# })
-
 Bin$methods(initialize = function(name="Unknown", x, perf, ...) {
   ## perform bin checks here
   stopifnot(length(x) > 0)
-  # stopifnot(length(x) == length(y))
-  # stopifnot(length(x) == length(w))
-  # stopifnot(!any(is.na(y)))
   callSuper(name=name, x=x, perf=perf, ...)
+  stopifnot(length(x) == length(perf$y))
 })
 
 Bin$methods(bin = function(...) {
@@ -82,6 +74,17 @@ Bin$methods(expand = function(...) {
   history <<- c(history, list(tf))
 })
 
+Bin$methods(factorize = function(...) {
+  print("In factorize super?")
+  l <- c("MISSING","EXCEPTION","NORMAL")
+
+  factor(ifelse(is.na(x), "MISSING", ifelse(x %in% tf@exceptions$input,
+    "EXCEPTION", "NORMAL")), levels = l)
+  ## turn x into a factor based on the transform
+})
+
+Bin$methods(update = update_)
+
 Continuous <- setRefClass("Continuous",
   fields = c(x="numeric"),
   contains = "Bin"
@@ -92,19 +95,89 @@ Discrete <- setRefClass("Discrete",
   contains = "Bin"
 )
 
-# Continuous$methods(initialize = function(exceptions, ...) {
-#   #exceptions <<- list(input = numeric(), output = numeric())
-#   callSuper(...)
-# })
+
+
+fmt_numeric_cuts <- function(cuts) {
+  l = format(round(cuts, 2), trim=TRUE, nsmall=2, digits=2, big.mark=",",
+    scientific = FALSE)
+
+  fmt = sprintf("(%%%1$ds - %%%1$ds]", max(nchar(l))) ## get width of largest value
+
+  sprintf(fmt, head(l,-1), tail(l, -1))
+}
+
+
+Discrete$methods(factorize = function(...) {
+  f <- callSuper(...)
+
+  out <- x
+  levels(out) <- unlist(tf@tf)[levels(out)]
+  out <- addNA(out)
+  levels(out)[is.na(levels(out))] <- "Missing"
+
+  out
+})
+
+Continuous$methods(factorize = function(...) {
+  f <- callSuper(...)
+
+  lbls <- fmt_numeric_cuts(tf@tf)
+  out <- factor(x, exclude=NULL, levels=c(lbls, tf@exceptions$input, NA))
+
+  levels(out)[is.na(levels(out))] <- "Missing"
+  out[f == "NORMAL"] <- cut(x[f == "NORMAL"], tf@tf, include.lowest = T,
+    labels = lbls)
+
+  out
+})
+
+
+setMethod("update_", signature = c(.self="Binary_Performance"),
+  function(.self, ...) {
+
+    print("Binary Performance update!")
+
+  })
+
+setMethod("update_", signature = c(.self="Binary_Performance", b="Bin"),
+  function(.self, b) {
+    print("Binary Performance update! with Bin info!")
+
+    ## TODO: return an object that summarizes the bin and the binary performance
+
+
+    ## discretize the x var based on the bin type and the transform
+    f <- b$factorize()
+
+    ## can now split x and y and w and calculate
+
+    ## exceptions
+    exceptions <- .self$summarize(x = x, f = (f == "EXCEPTIONS"))
+
+    ## Calculate values for NAs, Exceptions, and Normal Values
+
+
+  })
+
+setMethod("update_", signature = c(.self="Bin"),
+  function(.self, ...) {
+    #browser()
+    callGeneric(.self$perf, b = .self)
+  })
+
+Binary_Performance$methods(update = update_)
 
 Continuous$methods(
   bin = function(min.iv=0.01, min.cnt=10, min.res=0, max.bin=10, mono=0,
                  exceptions=numeric(0), ...) {
 
     f <- !is.na(x)
-    tf@tf <<- .Call("bin", as.double(x[f]), as.double(y[f]), as.double(w[f]),
-                  as.double(min.iv), as.integer(min.cnt), as.integer(min.res),
-                  as.integer(max.bin), as.integer(mono), as.double(exceptions))
+    tf@tf <<- .Call("bin", as.double(x[f]), as.double(perf$y[f]),
+      as.double(perf$w[f]), as.double(min.iv), as.integer(min.cnt),
+      as.integer(min.res), as.integer(max.bin), as.integer(mono),
+      as.double(exceptions))
+
+    tf@exceptions$input <<- exceptions
 
     callSuper()
   }
@@ -135,12 +208,6 @@ Continuous$methods(
   }
 )
 
-
-### Discrete Class ###
-Discrete <- setRefClass("Discrete",
-  fields = c(x = "factor", map = "Transform"),
-  contains = "Bin")
-
 Discrete$methods(initialize = function(x, ...) {
   if(any(levels(x) %in% "")) stop("Factor levels contain blanks")
   callSuper(x=x, ...)
@@ -157,18 +224,3 @@ Discrete$methods(collapse = function(v) {
   tf@tf[f] <<- paste(names(tf@tf)[f], collapse=',') # collapse them with commas
   callSuper()
 })
-
-
-# continuous$methods("Bin" = callSuper())
-data(titanic)
-b <- Continuous$new(x=titanic$Fare, perf=new("Binary_Performance", y=titanic$Survived))
-# b$collapse(2:7)
-# b$bin()
-#
-# #levels(titanic$Embarked)[1] <- NA
-# d <- Discrete$new(x=titanic$Pclass, y=titanic$Survived)
-# d$bin()
-# d$collapse(2:3)
-
-
-# d$Bin()
