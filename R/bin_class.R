@@ -15,25 +15,59 @@ setMethod("initialize", "Transform", function(.Object, ...) {
   .Object
 })
 
+setClass("Performance", slots = c(
+  y = "numeric",
+  w = "numeric"),
+  contains = "VIRTUAL")
+
+setMethod("initialize", "Performance", function(.Object, y, ..., w=rep(1, length(y))) {
+  .Object@w <- w
+  .Object@y <- y
+  validObject(.Object)
+  .Object
+})
+
+setClass("Binary_Performance", slots = c(
+  ones = "numeric",
+  zeros = "numeric"),
+contains = "Performance")
+
+setMethod("initialize", "Binary_Performance", function(.Object, y, ...) {
+  browser()
+  .Object <- callNextMethod(.Object, y=y, ...)
+  .Object
+})
+
+
 ## exceptions is a list of two vectors each with the same number of elements
 
 ## bin class ##
 Bin <- setRefClass("Bin",
   fields = c(
     name = "character",
-    y = "numeric",
-    w = "NULLnumeric",
+    perf = "Performance",
+    # y = "numeric",
+    # w = "NULLnumeric",
     tf = "Transform",
     history = "list"),
   contains = "VIRTUAL")
 
-Bin$methods(initialize = function(name="Unknown", x, y, w=rep(1, length(x)), ...) {
+# Bin$methods(initialize = function(name="Unknown", x, y, w=rep(1, length(x)), ...) {
+#   ## perform bin checks here
+#   stopifnot(length(x) > 0)
+#   stopifnot(length(x) == length(y))
+#   stopifnot(length(x) == length(w))
+#   stopifnot(!any(is.na(y)))
+#   callSuper(name=name, x=x, y=y, w=w, ...)
+# })
+
+Bin$methods(initialize = function(name="Unknown", x, perf, ...) {
   ## perform bin checks here
   stopifnot(length(x) > 0)
-  stopifnot(length(x) == length(y))
-  stopifnot(length(x) == length(w))
-  stopifnot(!any(is.na(y)))
-  callSuper(name=name, x=x, y=y, w=w, ...)
+  # stopifnot(length(x) == length(y))
+  # stopifnot(length(x) == length(w))
+  # stopifnot(!any(is.na(y)))
+  callSuper(name=name, x=x, perf=perf, ...)
 })
 
 Bin$methods(bin = function(...) {
@@ -127,12 +161,12 @@ Discrete$methods(collapse = function(v) {
 
 # continuous$methods("Bin" = callSuper())
 data(titanic)
-b <- Continuous$new(x=titanic$Fare, y=titanic$Survived)
-b$collapse(2:7)
-b$bin()
-
-#levels(titanic$Embarked)[1] <- NA
-d <- Discrete$new(x=titanic$Pclass, y=titanic$Survived)
+b <- Continuous$new(x=titanic$Fare, perf=new("Binary_Performance", y=titanic$Survived))
+# b$collapse(2:7)
+# b$bin()
+#
+# #levels(titanic$Embarked)[1] <- NA
+# d <- Discrete$new(x=titanic$Pclass, y=titanic$Survived)
 # d$bin()
 # d$collapse(2:3)
 
