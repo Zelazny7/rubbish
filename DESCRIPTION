@@ -17,5 +17,6 @@ Collate:
     'generic_methods.R'
     'performance_class.R'
     'bin_class.R'
-    'continuous_class.R'
     'discrete_class.R'
+    'continuous_class.R'
+    'binary_performance_class.R'

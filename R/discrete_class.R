@@ -7,13 +7,6 @@ Discrete$methods(initialize = function(x, ...) {
   callSuper(x=x, ...)
 })
 
-Discrete$methods(bin = function() {
-
-  tf@tf <<- as.list(levels(x))
-  names(tf@tf) <<- levels(x)
-  callSuper()
-})
-
 Discrete$methods(collapse = function(v) {
 
   f <- which(tf@tf %in% unique(tf@tf)[v]) ## which values were selected for collapse?

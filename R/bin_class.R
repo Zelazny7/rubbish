@@ -25,7 +25,7 @@ setMethod(
   "update_",
   signature = c(.self="Bin"),
   function(.self, ...) {
-    callGeneric(.self$perf, b = .self)
+    callGeneric(.self$perf, b = .self, ...)
   })
 
 Bin$methods(update = function(...) {
@@ -43,6 +43,7 @@ Bin$methods(update = function(...) {
 })
 
 Bin$methods(bin = function(...) {
+  .self$perf$bin(b=.self, ...)
   update()
 })
 
@@ -75,9 +76,7 @@ Bin$methods(factorize = function(..., n) {
 
 Bin$methods(show = function(...) {
   if (length(cache) == 0) bin()
-
   round(do.call(rbind, cache[[length(cache)]]), 3)
-  #print(cache[[length(cache)]])
 })
 
 Bin$methods(undo = function(...) {

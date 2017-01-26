@@ -2,22 +2,6 @@
 Continuous <- setRefClass("Continuous", contains = "Bin")
 
 Continuous$methods(
-  bin = function(min.iv=0.01, min.cnt=10, min.res=0, max.bin=10, mono=0,
-                 exceptions=numeric(0), ...) {
-
-    f <- !is.na(x)
-    tf@tf <<- .Call("bin", as.double(x[f]), as.double(perf$y[f]),
-                    as.double(perf$w[f]), as.double(min.iv), as.integer(min.cnt),
-                    as.integer(min.res), as.integer(max.bin), as.integer(mono),
-                    as.double(exceptions))
-
-    tf@exceptions$input <<- exceptions
-
-    callSuper()
-  }
-)
-
-Continuous$methods(
   collapse = function(v) {
     d <- unique(pmax(pmin(tail(v, -1), length(tf@tf) - 1), 2))
     tf@tf <<- tf@tf[-d]
