@@ -52,21 +52,15 @@ setMethod(
   "update_",
   signature = c(.self="Binary_Performance", b="Bin"),
   function(.self, b) {
-    print("Binary Performance update! with Bin info!")
-
-    ## TODO: return an object that summarizes the bin and the binary performance
-    #browser()
-
     ## discretize the x var based on the bin type and the transform
     info <- b$factorize()
 
     ## can now split x and y and w and calculate
-    tmp <- lapply(info$types, function(f) {
+    lapply(info$types, function(f) {
       .self$summarize(factor(info$factor[f]), .self$y[f], .self$w[f])
     })
-    #tmp
 
-    round(data.frame(do.call(rbind, tmp), check.names = F), 3)
+    ###round(data.frame(do.call(rbind, tmp), check.names = F), 3)
     ## Calculate values for NAs, Exceptions, and Normal Values
   })
 

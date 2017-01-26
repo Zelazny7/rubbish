@@ -1,7 +1,6 @@
 
 setClass("Transform", slots = c(
   tf = "ANY",
-  value = "numeric",
   subst = "numeric",
   nas = "numeric",
   exceptions = "list")

@@ -22,10 +22,10 @@ Discrete$methods(collapse = function(v) {
 })
 
 Discrete$methods(expand = function(v) {
-  # TODO: Implement this!
+  f <- tf@tf %in% unique(tf@tf)[v]
+  tf@tf[f] <<- levels(x)[f]
   callSuper()
 })
-
 
 Discrete$methods(factorize = function(...) {
   f <- callSuper(...)

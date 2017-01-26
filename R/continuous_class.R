@@ -27,9 +27,12 @@ Continuous$methods(
 
 Continuous$methods(
   expand = function(v) {
-    f <- ! (is.na(x) | x %in% exceptions$input)
 
-    a <- min(max(1, v), length(tf$tf))  # can't be smaller than 1
+    stopifnot(length(v) == 1)
+
+    f <- ! (is.na(x) | x %in% tf@exceptions$input)
+
+    a <- min(max(1, v), length(tf@tf))  # can't be smaller than 1
     z <- max(min(v + 1, length(tf@tf)), a) # or larger than max els
 
     vals <- x[x > tf@tf[a] & x <= tf@tf[z] & f]
