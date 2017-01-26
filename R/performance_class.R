@@ -10,4 +10,3 @@ Performance$methods(initialize = function(y, ..., w=rep(1, length(y))) {
   stopifnot(!any(is.na(y)))
   stopifnot(length(y) == length(w))
 })
-

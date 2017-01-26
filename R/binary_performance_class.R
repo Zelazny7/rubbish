@@ -52,14 +52,6 @@ Binary_Performance$methods(summarize = function(x, y, w) {
 
 })
 
-
-setMethod(
-  "update_",
-  signature = c(.self="Binary_Performance"),
-  function(.self, ...) {
-    print("Binary Performance update!")
-  })
-
 setMethod(
   "update_",
   signature = c(.self="Binary_Performance", b="Bin"),
