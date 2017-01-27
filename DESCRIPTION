@@ -20,3 +20,4 @@ Collate:
     'discrete_class.R'
     'continuous_class.R'
     'binary_performance_class.R'
+    'classing_class.R'

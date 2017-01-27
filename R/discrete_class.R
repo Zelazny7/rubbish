@@ -2,13 +2,11 @@
 Discrete <- setRefClass("Discrete", contains = "Bin")
 
 Discrete$methods(initialize = function(x, ...) {
-
-  if(any(levels(x) %in% "")) stop("Factor levels contain blanks")
+  if(any(levels(x) %in% "")) stop("Factor variable contains blanks")
   callSuper(x=x, ...)
 })
 
 Discrete$methods(collapse = function(v) {
-
   f <- which(tf@tf %in% unique(tf@tf)[v]) ## which values were selected for collapse?
   tf@tf[f] <<- paste(names(tf@tf)[f], collapse=',') # collapse them with commas
   callSuper()

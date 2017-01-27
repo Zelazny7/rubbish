@@ -29,16 +29,18 @@ setMethod(
   })
 
 Bin$methods(update = function(...) {
+  # browser()
   result <- update_(.self)
 
   tf@subst <<- result$normal[,"Pred"]
   tf@nas <<- c(Missing=result$missing[,"Pred"])
-  tf@exceptions$output <<- result$exception[,"Pred"]
-  names(tf@exceptions$output) <<- tf@exceptions$input
+  # tf@exceptions$output <<- result$exception[,"Pred"]
+  # tf@exceptions$output) <<- tf@exceptions$input
 
   ## append to the history and the cache
   history <<- c(history, list(tf))
   cache <<- c(cache, list(result))
+
   show()
 })
 
@@ -69,7 +71,7 @@ Bin$methods(factorize = function(..., n) {
   }
 
   val_nas <- is.na(x)
-  val_exc <- x %in% tf@exceptions$input
+  val_exc <- x %in% tf@exceptions
   val_nrm <- !(val_nas | val_exc)
   list(normal = val_nrm, exception = val_exc, missing = val_nas)
 })
@@ -96,4 +98,20 @@ Bin$methods(reset = function(...) {
 Bin$methods(subst = function(..., n) {
   idx <- as.character(factorize(n=n)$factor)
   c(tf@subst, tf@nas, tf@exceptions$output)[idx]
+})
+
+### move the definition to the transform class so it can do the unwrapping
+Bin$methods(set_equal = function(v1, v2, ...) {
+  print("Implement this in the Transform Class")
+})
+
+Bin$methods(set_cutpoints = function(cuts, ...) {
+  cuts <- sort(unique(c(-Inf, cuts, Inf)))
+  tf@tf <<- cuts
+  update()
+})
+
+
+Bin$methods(neutralize = function(n, ...) {
+  print("Implement this in the Transform Class")
 })
