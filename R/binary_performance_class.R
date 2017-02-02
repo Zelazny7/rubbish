@@ -59,6 +59,8 @@ setMethod(
     ## discretize the x var based on the bin type and the transform
     info <- b$factorize()
 
+    # browser()
+
     ## can now split x and y and w and calculate
     lapply(info$types, function(f) {
       .self$summarize(factor(info$factor[f]), .self$y[f], .self$w[f])

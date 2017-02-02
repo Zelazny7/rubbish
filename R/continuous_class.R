@@ -12,6 +12,7 @@ Continuous$methods(
 Continuous$methods(
   expand = function(v) {
 
+    # browser()
     stopifnot(length(v) == 1)
 
     f <- ! (is.na(x) | x %in% tf@exceptions$input)
@@ -19,11 +20,11 @@ Continuous$methods(
     a <- min(max(1, v), length(tf@tf))  # can't be smaller than 1
     z <- max(min(v + 1, length(tf@tf)), a) # or larger than max els
 
-    vals <- x[x > tf@tf[a] & x <= tf@tf[z] & f]
+    vals <- c(x[x > tf@tf[a] & x <= tf@tf[z] & f])
 
-    q <- unique(quantile(vals, seq(0, 1, 0.2))) # quintiles
+    q <- c(quantile(vals, seq(0, 0.8, 0.2)), tf@tf[z]) # quintiles
 
-    tf@tf <<- sort(c(tf@tf[-z], q))
+    tf@tf <<- sort(unique(c(tf@tf[-z], q)))
     callSuper()
   }
 )

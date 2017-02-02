@@ -34,8 +34,7 @@ Bin$methods(update = function(...) {
 
   tf@subst <<- result$normal[,"Pred"]
   tf@nas <<- c(Missing=result$missing[,"Pred"])
-  # tf@exceptions$output <<- result$exception[,"Pred"]
-  # tf@exceptions$output) <<- tf@exceptions$input
+  tf@exceptions$output <<- result$exception[,"Pred"]
 
   ## append to the history and the cache
   history <<- c(history, list(tf))
@@ -71,14 +70,22 @@ Bin$methods(factorize = function(..., n) {
   }
 
   val_nas <- is.na(x)
-  val_exc <- x %in% tf@exceptions
+  val_exc <- x %in% tf@exceptions$input
   val_nrm <- !(val_nas | val_exc)
   list(normal = val_nrm, exception = val_exc, missing = val_nas)
 })
 
 Bin$methods(show = function(...) {
   if (length(cache) == 0) bin()
-  round(do.call(rbind, cache[[length(cache)]]), 3)
+  out <- round(do.call(rbind, cache[[length(cache)]]), 3)
+
+  i <- match(tf@neutralized, row.names(out), 0)
+
+  ## the ones that are no longer present get dropped
+  tf@neutralized <<- tf@neutralized[i != 0]
+
+  out[i, "Pred"] <- 0
+  out
 })
 
 Bin$methods(undo = function(...) {
@@ -97,7 +104,9 @@ Bin$methods(reset = function(...) {
 
 Bin$methods(subst = function(..., n) {
   idx <- as.character(factorize(n=n)$factor)
-  c(tf@subst, tf@nas, tf@exceptions$output)[idx]
+  out <- c(tf@subst, tf@nas, tf@exceptions$output)[idx]
+  out[names(out) %in% tf@neutralized] <- 0
+  out
 })
 
 ### move the definition to the transform class so it can do the unwrapping
@@ -111,7 +120,8 @@ Bin$methods(set_cutpoints = function(cuts, ...) {
   update()
 })
 
-
-Bin$methods(neutralize = function(n, ...) {
-  print("Implement this in the Transform Class")
+Bin$methods(neutralize = function(i, ...) {
+  # browser()
+  tf <<- neutralize_(tf, i)
+  update()
 })
