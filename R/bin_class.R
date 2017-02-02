@@ -1,65 +1,127 @@
-setClassUnion("ValidBinType", c("numeric", "factor"))
+#' @include performance_class.R transform_class.R
 
-bin <- setRefClass("bin",
+setClassUnion("NumericOrFactor", members = c("numeric", "factor"))
+
+## bin class ##
+Bin <- setRefClass("Bin",
   fields = c(
+    x = "NumericOrFactor",
     name = "character",
-    x    = "ValidBinType",
-    y    = "numeric",
-    w    = "numeric"),
+    perf = "Performance",
+    tf = "Transform",
+    history = "list",
+    cache = "list"
+    ),
   contains = "VIRTUAL")
 
-## TODO: remove the x, y, w from the function call and reference via .self!
+Bin$methods(initialize = function(name="Unknown", x, perf, ...) {
+  ## perform bin checks here
+  stopifnot(length(x) > 0)
+  callSuper(name=name, x=x, perf=perf, ...)
+  stopifnot(length(x) == length(perf$y))
+})
 
-## create a generic method here
-setGeneric("Bin",
-  function(.self, x, y, w, min.iv=0.01, min.cnt=10, min.res=0, max.bin=10, mono=0, exceptions=numeric(0)) {
-    stopifnot(NROW(x) > 0)
-    if (!missing(y)) stopifnot(NROW(x) == NROW(y))
-    standardGeneric("Bin")
+setMethod(
+  "update_",
+  signature = c(.self="Bin"),
+  function(.self, ...) {
+    callGeneric(.self$perf, b = .self, ...)
+  })
+
+Bin$methods(update = function(...) {
+  # browser()
+  result <- update_(.self)
+
+  tf@subst <<- result$normal[,"Pred"]
+  tf@nas <<- c(Missing=result$missing[,"Pred"])
+  tf@exceptions$output <<- result$exception[,"Pred"]
+
+  ## append to the history and the cache
+  history <<- c(history, list(tf))
+  cache <<- c(cache, list(result))
+
+  show()
+})
+
+Bin$methods(bin = function(...) {
+  .self$perf$bin(b=.self, ...)
+  update()
+})
+
+Bin$methods(collapse = function(...) {
+  update()
+})
+
+Bin$methods(expand = function(...) {
+  update()
+})
+
+
+Bin$methods(select = function(n) {
+  n <- max(min(n, length(history)), 1)
+  history <<- c(history, list(history[[n]]))
+  cache <<- c(cache, list(cache[[n]]))
+  tf <<- history[[n]]
+})
+
+Bin$methods(factorize = function(..., n) {
+  if (!missing(n)) {
+    select(n)
   }
-)
 
-bin$methods("Bin" = Bin)
+  val_nas <- is.na(x)
+  val_exc <- x %in% tf@exceptions$input
+  val_nrm <- !(val_nas | val_exc)
+  list(normal = val_nrm, exception = val_exc, missing = val_nas)
+})
 
-continuous <- setRefClass("continuous",
-  fields = c(cuts = "numeric"),
-  contains = "bin")
+Bin$methods(show = function(...) {
+  if (length(cache) == 0) bin()
+  out <- round(do.call(rbind, cache[[length(cache)]]), 3)
 
-discrete <- setRefClass("discrete",
-  fields = c(map = "list"),
-  contains = "bin")
+  i <- match(tf@neutralized, row.names(out), 0)
 
+  ## the ones that are no longer present get dropped
+  tf@neutralized <<- tf@neutralized[i != 0]
 
-setMethod("Bin",
-  signature = c("bin", "ValidBinType", "numeric"),
-  function(.self, x, y, w, min.iv=0.01, min.cnt=10, min.res=0, max.bin=10, mono=0, exceptions=numeric(0)) {
-    w <- rep(1, length(x))
-    callGeneric(.self=.self, x=x, y=y, w=w, name=name, min.iv=min.iv, min.cnt=min.cnt,
-      min.res=min.res, max.bin=max.bin, mono=mono, exceptions=exceptions, ...)
+  out[i, "Pred"] <- 0
+  out
+})
+
+Bin$methods(undo = function(...) {
+  if (length(history) <= 1) {
+    return()
+  } else {
+    tf <<- history[[length(history)]]
+    cache <<- head(cache, -1)
+    history <<- head(history, -1)
   }
-)
+})
 
-setMethod("Bin",
-  signature = c("continuous", "numeric", "numeric", "numeric"),
-  function(.self, x, y, w, min.iv=0.01, min.cnt=10, min.res=0, max.bin=10, mono=0, exceptions=numeric(0)) {
+Bin$methods(reset = function(...) {
+  print("Implement the reset function")
+})
 
-    f <- !is.na(x)
-    cuts <- .Call("bin", as.double(x[f]), as.double(y[f]), as.double(w[f]),
-      as.double(min.iv), as.integer(min.cnt), as.integer(min.res),
-      as.integer(max.bin), as.integer(mono), as.double(exceptions))
+Bin$methods(subst = function(..., n) {
+  idx <- as.character(factorize(n=n)$factor)
+  out <- c(tf@subst, tf@nas, tf@exceptions$output)[idx]
+  out[names(out) %in% tf@neutralized] <- 0
+  out
+})
 
-    .self$cuts <- cuts
+### move the definition to the transform class so it can do the unwrapping
+Bin$methods(set_equal = function(v1, v2, ...) {
+  print("Implement this in the Transform Class")
+})
 
-  }
-)
+Bin$methods(set_cutpoints = function(cuts, ...) {
+  cuts <- sort(unique(c(-Inf, cuts, Inf)))
+  tf@tf <<- cuts
+  update()
+})
 
-
-
-
-# continuous$methods("Bin" = callSuper())
-
-b <- continuous$new()
-# b$Bin()
-
-
-
+Bin$methods(neutralize = function(i, ...) {
+  # browser()
+  tf <<- neutralize_(tf, i)
+  update()
+})
