@@ -23,6 +23,7 @@ setMethod("bin_",
       as.double(exceptions))
 
     b$tf@exceptions$input <- exceptions
+
   })
 
 setMethod("bin_",

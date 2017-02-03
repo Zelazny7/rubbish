@@ -10,7 +10,8 @@ Bin <- setRefClass("Bin",
     perf = "Performance",
     tf = "Transform",
     history = "list",
-    cache = "list"
+    cache = "list",
+    args = "list"
     ),
   contains = "VIRTUAL")
 
@@ -45,6 +46,7 @@ Bin$methods(update = function(...) {
 
 Bin$methods(bin = function(...) {
   .self$perf$bin(b=.self, ...)
+  args <<- modifyList(args, list(...))
   update()
 })
 
@@ -89,17 +91,20 @@ Bin$methods(show = function(...) {
 })
 
 Bin$methods(undo = function(...) {
-  if (length(history) <= 1) {
-    return()
+  if (length(history) == 0) {
+    print("Nothing to undo")
   } else {
     tf <<- history[[length(history)]]
     cache <<- head(cache, -1)
     history <<- head(history, -1)
   }
+  show()
 })
 
 Bin$methods(reset = function(...) {
-  print("Implement the reset function")
+  do.call(perf$bin, c(list(b=.self), args))
+  tf@neutralized <<- character(0)
+  update()
 })
 
 Bin$methods(subst = function(..., n) {
@@ -121,7 +126,25 @@ Bin$methods(set_cutpoints = function(cuts, ...) {
 })
 
 Bin$methods(neutralize = function(i, ...) {
-  # browser()
   tf <<- neutralize_(tf, i)
   update()
 })
+
+Bin$methods(mono = function(m, ...) {
+  args$mono <<- m
+  do.call(perf$bin, c(list(b=.self), args))
+  update()
+})
+
+Bin$methods(exceptions = function(e, ...) {
+  args$exceptions <<- e
+  tf@exceptions <<- list(input=e, output=numeric(0))
+  update()
+})
+
+## remove this later. just for testing purposes
+Bin$methods(save_to_disk = function(f, ...) {
+  saveRDS(.self, f)
+})
+
+
