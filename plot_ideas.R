@@ -1,43 +1,58 @@
 
-tmp <- tail(b$cache, 1)[[1]]
-woe <- c(tmp$normal[,'WoE'], tmp$exception[,'WoE'])
-val <- c(tmp$normal[,'Pred'], tmp$exception[,'Pred'])
-both <- woe
 
-## find the max and min
-xlim <- range(both) + c(-0.5, 0.5)
+plot_bin <- function(b) {
+
+}
 
 opar <- par()
 
-# m <- rbind(c(2, 1))
-# nf <- layout(mat = m,  widths = c(1,3), heights = 1)
-#par(mar=c(3.1, 3.1, 1.1, 2.1))
-#par(mar=c(0,0,0,0))
 
 
-par(oma=c(0,4,0,0) )
-#par(mar=c(4,4.5,2,1))
+b$mono(-1)
+b$expand(2)
+b$neutralize(1:4)
 
+
+## easiest to grab from show method?
+b$show()
+tmp <- d$show()
+lbls <- rev(row.names(tmp))
+woe <- rev(tmp[,"WoE"])
+val <- rev(tmp[,"Pred"])
+pctN <- sprintf("%0.1f%%", rev(tmp[, "%N"] * 100))
+
+## find the max and min
+xlim <- range(c(woe, val)) + c(-0.5, 0.5)
+
+## set margin based on nchars
+w <- max(nchar(lbls))
+
+par(oma=c(0,w/6,0,0) )
 #text(x = 1, y = c(0.5, length(woe) + 0.5))
+
+make_bars <- function(v, width=0.70, ...) {
+  left <- pmin(v, 0)
+  right <- pmax(v, 0)
+  center <- seq_along(left)
+  top <- center - 0.5 * width
+  bottom <- center + 0.5 * width
+  rect(left, bottom, right, top, ...)
+  center
+}
+
+
 plot(NA, xlim=xlim, ylim=c(0.5, length(woe) + 0.5), xlab = "Weight of Evidence",
-     ylab=NA, yaxt="n")
+  ylab=NA, yaxt="n", main = b$name)
 
-axis(side = 2, labels = names(woe), at = center, las = 2, lwd.ticks = 0, cex.axis = 0.80)
+abline(v = 0, lty=3)
 
-#par(mfrow=c(1,1))
-l <- pmin(both, 0)
-r <- pmax(both, 0)
-width <- 0.70
-center <- seq_along(l)
-top <- center - 0.5 * width
-bot <- center + 0.5 * width
-rect(l, bot, r, top)
-title(b$name)
+center <- make_bars(woe, col=rgb(0,0,0,alpha = 0.30))
+center <- make_bars(val, width=0.2, col="black")
 
-# plot(rep(0, length(center)), center, ann = F, bty = 'n', type = 'n',
-#      xaxt = 'n', yaxt = 'n', mar=c(0,0,0,0) + 0.1)
-#par(mar=c(0,0,0,0))
-text(x=0, y=center, labels = names(woe), cex=0.9)
+text(x = min(xlim), y = center, labels = sprintf(" [%02d]", rev(seq_along(lbls))), cex=0.80)
+text(x = max(xlim) - 0.1, y = center, labels = pctN, cex=0.80)
+axis(side = 2, labels = lbls, at = center, las = 2, lwd.ticks = 0, cex.axis = 0.80)
+
 
 par(opar)
 

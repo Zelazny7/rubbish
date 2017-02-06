@@ -1,4 +1,4 @@
-#' @include performance_class.R transform_class.R
+#' @include performance_class.R transform_class.R generic_methods.R
 
 setClassUnion("NumericOrFactor", members = c("numeric", "factor"))
 
@@ -146,5 +146,15 @@ Bin$methods(exceptions = function(e, ...) {
 Bin$methods(save_to_disk = function(f, ...) {
   saveRDS(.self, f)
 })
+
+setMethod("plot_", c(.self="Bin"), function(.self, b, ...) {
+  .self$perf$plot(.self)
+})
+
+Bin$methods(plot = plot_)
+
+
+
+
 
 

@@ -1,4 +1,6 @@
-b <- Continuous$new(name="Age", x=titanic$Age, perf=Binary_Performance$new(y=titanic$Survived))
+## when bin is called again, need to overriwte args
+
+b <- Continuous$new(name="Fare", x=titanic$Age, perf=Binary_Performance$new(y=titanic$Survived))
 b$bin()
 b$neutralize(2:5)
 b$expand(7)
