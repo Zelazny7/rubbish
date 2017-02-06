@@ -13,8 +13,8 @@ Imports:
     Rcpp (>= 0.12.8)
 LinkingTo: Rcpp
 Collate:
-    'transform_class.R'
     'generic_methods.R'
+    'transform_class.R'
     'performance_class.R'
     'bin_class.R'
     'discrete_class.R'

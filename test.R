@@ -29,3 +29,13 @@ d$collapse(1:2)
 
 
 
+library(ggplot2)
+
+b$mono(2)
+plt <- as.data.frame(b$show())
+ggplot(plt, aes(x=row.names(plt), y=WoE, fill=N)) + geom_bar(stat="identity") + coord_flip()
+
+b$undo()
+
+
+

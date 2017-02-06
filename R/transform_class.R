@@ -1,3 +1,4 @@
+#' @include generic_methods.R
 
 setClass("Transform", slots = c(
   tf = "ANY",
@@ -12,8 +13,6 @@ setMethod("initialize", "Transform", function(.Object, ...) {
   validObject(.Object)
   .Object
 })
-
-setGeneric("neutralize_", function(tf, i, ...) callGeneric("neutralize_"))
 
 setMethod("neutralize_", signature = c(tf="Transform", i="numeric"),
   function(tf, i, ...) {

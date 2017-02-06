@@ -71,5 +71,24 @@ setMethod(
 
 Binary_Performance$methods(update = update_)
 
+setGeneric("plot_", function(.self, b, ...) callGeneric("plot_"))
+
+cold.day.palette <- rev(c(
+  "#131F2C",
+  "#263F5D",
+  "#2B688E",
+  "#6EA9C3",
+  "#B8D2DD"))
+
+cold.day.breaks <- c(-Inf, 100, 500, 1000, 5000, Inf)
+
+setMethod(
+  "plot_",
+  signature = c(.self="Binary_Performance", b="Bin"),
+  function(.self, b) {
+
+  })
+
+Binary_Performance$methods(plot = plot_)
 
 
