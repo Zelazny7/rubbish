@@ -10,9 +10,11 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports:
-    Rcpp (>= 0.12.8)
+    Rcpp (>= 0.12.8),
+    Matrix,
+    glmnet
 LinkingTo: Rcpp
-Collate:
+Collate: 
     'generic_methods.R'
     'transform_class.R'
     'performance_class.R'
@@ -21,3 +23,6 @@ Collate:
     'continuous_class.R'
     'binary_performance_class.R'
     'classing_class.R'
+    'imports.R'
+    'scorecard_class.R'
+RoxygenNote: 6.0.1

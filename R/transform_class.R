@@ -26,3 +26,11 @@ setMethod("neutralize_", signature = c(tf="Transform", i="numeric"),
     new_tf@neutralized <- setdiff(union(tf@neutralized, x[i]), nix)
     new_tf
   })
+
+## replace inifnite prediction values with zeros
+# replace_infinite <- function(tf) {
+#   tf@subst[!is.finite(tf@subst)] <- 0
+#   tf@nas[!is.finite(tf@nas)] <- 0
+#   tf@exceptions$output[!is.finite(tf@exceptions$output)] <- 0
+#   tf
+# }

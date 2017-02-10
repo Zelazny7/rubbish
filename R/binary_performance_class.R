@@ -1,5 +1,7 @@
 #' @include performance_class.R continuous_class.R discrete_class.R
 
+#' @export Binary_Performance
+#' @exportClass Binary_Performance
 Binary_Performance <- setRefClass("Binary_Performance", fields = c(
   ones = "numeric",
   zeros = "numeric"),
@@ -57,15 +59,18 @@ setMethod(
   "update_",
   signature = c(.self="Binary_Performance", b="Bin"),
   function(.self, b) {
+    #browser()
     ## discretize the x var based on the bin type and the transform
     info <- b$factorize()
 
-    # browser()
-
     ## can now split x and y and w and calculate
-    lapply(info$types, function(f) {
+    out <- lapply(info$types, function(f) {
       .self$summarize(factor(info$factor[f]), .self$y[f], .self$w[f])
     })
+
+    out$Total <- colSums(do.call(rbind, out))
+    out$Total[c("P(1)", "WoE", "Pred")] <- 0
+    out
 
   })
 
@@ -89,7 +94,7 @@ setMethod(
     #opar <- par()$oma # save the current settings
     on.exit(par(oma=rep(0, 4))) # restore them on exit
 
-    tmp <- b$show()
+    tmp <- head(b$show(), -1)
     lbls <- rev(row.names(tmp))
     woe <- rev(tmp[,"WoE"])
     val <- rev(tmp[,"Pred"])

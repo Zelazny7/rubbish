@@ -42,15 +42,21 @@ fmt_numeric_cuts <- function(cuts) {
 ## it is used by the update performance functions to get the X-var
 ## summary data
 Continuous$methods(
-  factorize = function(...) {
+  factorize = function(newdata=.self$x, ...) {
+    f <- callSuper(newdata=newdata, ...)
 
-  f <- callSuper(...)
+    lbls <- fmt_numeric_cuts(tf@tf)
+    out <- factor(newdata, exclude=NULL,
+      levels=c(lbls, tf@exceptions$input, NA))
 
-  lbls <- fmt_numeric_cuts(tf@tf)
-  out <- factor(x, exclude=NULL, levels=c(lbls, tf@exceptions$input, NA))
+    levels(out)[is.na(levels(out))] <- "Missing"
+    out[f$normal] <- cut(newdata[f$normal], tf@tf, include.lowest = T,
+      labels = lbls)
 
-  levels(out)[is.na(levels(out))] <- "Missing"
-  out[f$normal] <- cut(x[f$normal], tf@tf, include.lowest = T, labels = lbls)
+    list(factor=out, types=f)
+})
 
-  list(factor=out, types=f)
+Continuous$methods(predict = function(newdata=.self$x, ...) {
+  stopifnot(is.numeric(newdata))
+  callSuper(newdata=newdata, ...)
 })

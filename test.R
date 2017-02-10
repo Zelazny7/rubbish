@@ -1,6 +1,10 @@
 ## when bin is called again, need to overriwte args
 
-b <- Continuous$new(name="Fare", x=titanic$Age, perf=Binary_Performance$new(y=titanic$Survived))
+x <- titanic
+for (i in 1:8) x <- rbind(x, x)
+
+
+b <- Continuous$new(name="Fare", x=x$Fare, perf=Binary_Performance$new(y=x$Survived))
 b$bin()
 b$neutralize(2:5)
 b$expand(7)
@@ -8,16 +12,18 @@ b$collapse(1:3)
 b$mono(2)
 b$exceptions(c(24,28))
 b$reset()
-
 b$bin(mono=2, exceptions=c(24, 28), min.res=20)
+
 b$mono(0)
 b$save_to_disk("test.rds")
 
 neutralize_(b$tf, 2:3)
-levels(titanic$Embarked)[levels(titanic$Embarked) == ""] <- NA
 
+levels(titanic$Embarked)[levels(titanic$Embarked) == ""] <- NA
 classing <- Classing$new(titanic, performance=Binary_Performance$new(y=titanic$Survived))
 classing$bin(mono = 2, exceptions = -1)
+classing$fit()
+
 
 saveRDS(classing, "classing.rds")
 classing <- readRDS("classing.rds")
@@ -29,15 +35,6 @@ d$neutralize(1:3)
 d$reset()
 d$collapse(1:2)
 
-
-
-library(ggplot2)
-
-b$mono(2)
-plt <- as.data.frame(b$show())
-ggplot(plt, aes(x=row.names(plt), y=WoE, fill=N)) + geom_bar(stat="identity") + coord_flip()
-
-b$undo()
 
 
 

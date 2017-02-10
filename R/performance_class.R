@@ -2,10 +2,9 @@
 
 Performance <- setRefClass("Performance", fields = c(
   y = "numeric",
-  w = "numeric"),
-  contains = "VIRTUAL")
+  w = "numeric"))
 
-Performance$methods(initialize = function(y, ..., w=rep(1, length(y))) {
+Performance$methods(initialize = function(y=numeric(0), ..., w=rep(1, length(y))) {
   callSuper(y=y, w=w, ...)
   stopifnot(!any(is.na(y)))
   stopifnot(length(y) == length(w))
