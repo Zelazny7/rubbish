@@ -36,5 +36,13 @@ d$reset()
 d$collapse(1:2)
 
 
+sc <- rubbish:::Scorecard$new(d=titanic, performance=Binary_Performance$new(y=titanic$Survived))
+sc$bin(mono=2, exceptions=-1, min.res=25, max.bin=5)
 
+fit <- sc$fit("model 1", nfolds=10)
+fit <- sc$fit("model 2", nfolds=10)
+fit <- sc$fit("model 3", nfolds=10)
 
+sc$predict()
+
+sc$step["Embarked"] <- 3

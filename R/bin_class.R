@@ -66,32 +66,33 @@ Bin$methods(expand = function(...) {
 })
 
 
-Bin$methods(select = function(n) {
-  n <- max(min(n, length(history)), 1)
-  history <<- c(history, list(history[[n]]))
-  cache <<- c(cache, list(cache[[n]]))
-  tf <<- history[[n]]
-})
+# Bin$methods(select = function(n) {
+#   n <- max(min(n, length(history)), 1)
+#   history <<- c(history, list(history[[n]]))
+#   cache <<- c(cache, list(cache[[n]]))
+#   tf <<- history[[n]]
+# })
 
-Bin$methods(factorize = function(newdata=.self$x, ..., n) {
-  if (!missing(n)) {
-    select(n)
-  }
+Bin$methods(factorize = function(newdata=.self$x, transform=.self$tf, ..., n) {
+  # if (!missing(n)) {
+  #   select(n)
+  # }
 
   val_nas <- is.na(newdata)
-  val_exc <- newdata %in% tf@exceptions$input
+  val_exc <- newdata %in% transform@exceptions$input
   val_nrm <- !(val_nas | val_exc)
   list(normal = val_nrm, exception = val_exc, missing = val_nas)
 })
 
-Bin$methods(show = function(...) {
-  if (length(cache) == 0) bin()
-  out <- round(do.call(rbind, cache[[length(cache)]]), 3)
+Bin$methods(show = function(N=length(.self$cache), ...) {
+  if (N == 0) stop("`bin` function not called yet.", call. = FALSE)
 
-  i <- match(tf@neutralized, row.names(out), 0)
+  out <- round(do.call(rbind, cache[[N]]), 3)
+
+  i <- match(history[[N]]@neutralized, row.names(out), 0)
 
   ## the ones that are no longer present get dropped
-  tf@neutralized <<- tf@neutralized[i != 0]
+  #tf@neutralized <<- tf@neutralized[i != 0]
 
   out[i, "Pred"] <- 0
 
@@ -99,6 +100,7 @@ Bin$methods(show = function(...) {
   # out
 })
 
+## TODO: think about removing this...
 Bin$methods(undo = function(...) {
   if (length(history) == 0) {
     print("Nothing to undo")
@@ -152,11 +154,11 @@ setMethod("plot_", c(.self="Bin"), function(.self, b, ...) {
 
 Bin$methods(plot = plot_)
 
-Bin$methods(predict = function(newdata=.self$x, ...) {
+Bin$methods(predict = function(newdata=.self$x, transform=.self$tf, ...) {
   # browser()
-  idx <- as.character(.self$factorize(newdata=newdata, ...)$factor)
-  out <- c(.self$tf@subst, .self$tf@nas, .self$tf@exceptions$output)[idx]
-  out[names(out) %in% .self$tf@neutralized] <- 0
+  idx <- as.character(.self$factorize(newdata=newdata, transform=transform, ...)$factor)
+  out <- c(transform@subst, transform@nas, transform@exceptions$output)[idx]
+  out[names(out) %in% transform@neutralized] <- 0
   unname(out)
 })
 

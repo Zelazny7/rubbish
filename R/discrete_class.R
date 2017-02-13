@@ -18,18 +18,18 @@ Discrete$methods(expand = function(v) {
   callSuper()
 })
 
-Discrete$methods(factorize = function(newdata=.self$x, ...) {
+Discrete$methods(factorize = function(newdata=.self$x, transform=.self$tf, ...) {
   f <- callSuper(newdata, ...)
 
   out <- newdata
-  levels(out) <- unlist(tf@tf)[levels(out)]
+  levels(out) <- unlist(transform@tf)[levels(out)]
   out <- addNA(out)
   levels(out)[is.na(levels(out))] <- "Missing"
 
   list(factor=out, types=f)
 })
 
-Discrete$methods(predict = function(newdata=.self$x, ...) {
+Discrete$methods(predict = function(newdata=.self$x, transform=.self$tf, ...) {
   stopifnot(is.factor(newdata))
-  callSuper(newdata=newdata, ...)
+  callSuper(newdata=newdata, transform=transform, ...)
 })

@@ -6,8 +6,7 @@ Classing <- setRefClass("Classing",
   fields = c(
     variables = "list",
     performance = "Performance",
-    step1 = "numeric",
-    step2 = "numeric")
+    step = "numeric") # step is 1, 2, or 3 depending on model inclusion level
   )
 
 setGeneric("create_bin", function(x, ...) callGeneric("create_bin"))
@@ -28,6 +27,8 @@ Classing$methods(initialize = function(d=NULL,
   variables <<- lapply(setNames(names(d), names(d)), function(nm) {
     create_bin(x = d[[nm]], perf = performance, name = nm, ...)
   })
+
+  step <<- setNames(rep(2, length(d)), names(d))
 })
 
 Classing$methods(bin = function(...) {
@@ -41,7 +42,7 @@ Classing$methods(show = function() {
 })
 
 Classing$methods(predict = function(newdata=lapply(variables, function(b) b$x),
-  ...) {
+  transforms=lapply(variables, function(b) b$tf), ...) {
 
   ## check that data has var names
   stopifnot(!is.null(names(newdata)))
@@ -57,32 +58,12 @@ Classing$methods(predict = function(newdata=lapply(variables, function(b) b$x),
   ## put the newdata in the same order as the variables
   i <- match(vnm, dnm)
 
-  mapply(function(b, v) b$predict(newdata=v), variables[i], newdata[i])
+  mapply(function(b, v, tf) b$predict(newdata=v, transform=tf),
+         variables[i], newdata[i], transforms[i])
 
 })
 
-
-Classing$methods(fit = function(newdata=lapply(variables, function(b) b$x),
-  y=performance$y, w=performance$w, nfolds=5, upper.limits=3, lower.limits=0,
-  alpha=1, ...) {
-
-  # browser()
-
-  ## check for consistent dimensions
-  stopifnot(length((newdata[[1]]) == length(y)) &&  (length(y) == length(w)))
-
-  x <- predict(newdata=newdata)
-
-  fit <- cv.glmnet(x = x, y = y, weights = w, nfolds = nfolds,
-    alpha = alpha, upper.limits=upper.limits, lower.limits=lower.limits, ...)
-
-  ## return the fit object
-  fit
-
+Classing$methods(drop = function(i, ...) {
+  stopifnot(all(i %in% names(step)))
+  step[i] <<- 3
 })
-
-
-
-
-
-
