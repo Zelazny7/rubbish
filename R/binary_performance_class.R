@@ -7,11 +7,15 @@ Binary_Performance <- setRefClass("Binary_Performance", fields = c(
   zeros = "numeric"),
   contains = "Performance")
 
-Binary_Performance$methods(initialize =  function(y, ...) {
+Binary_Performance$methods(initialize =  function(y=.self$y, ...) {
   callSuper(y=y, ...)
   ones <<- sum((y == 1) * w)
   zeros <<- sum((y == 0) * w)
 })
+
+# Binary_Performance$methods(copy = function(...) {
+#   Binary_Performance$new()
+# })
 
 setMethod("bin_",
   signature = c(.self="Binary_Performance", b="Continuous"),
@@ -24,16 +28,19 @@ setMethod("bin_",
       as.integer(min.res), as.integer(max.bin), as.integer(mono),
       as.double(exceptions))
 
-    b$tf@exceptions$input <- exceptions
+    b$tf@exceptions <- setNames(rep(0, length(exceptions)), exceptions)
 
   })
 
 setMethod("bin_",
   signature = c(.self="Binary_Performance", b="Discrete"),
-  function(.self, b, ...) {
+  function(.self, b, exceptions=numeric(0), ...) {
+
+    #browser()
 
     b$tf@tf <- as.list(levels(b$x))
     names(b$tf@tf) <- levels(b$x)
+    b$tf@exceptions <- setNames(rep(0, length(exceptions)), exceptions)
   })
 
 Binary_Performance$methods(bin = bin_)
@@ -64,9 +71,20 @@ setMethod(
     info <- b$factorize()
 
     ## can now split x and y and w and calculate
-    out <- lapply(info$types, function(f) {
-      .self$summarize(factor(info$factor[f]), .self$y[f], .self$w[f])
-    })
+    out <- list()
+    f <- info$types$normal
+    out$normal <- .self$summarize(factor(info$factor[f]), .self$y[f], .self$w[f])
+
+    f <- info$types$exception
+    out$exception <- .self$summarize(factor(info$factor[f],
+      levels=names(b$tf@exceptions)), .self$y[f], .self$w[f])
+
+    f <- info$types$missing
+    out$missing <- .self$summarize(factor(info$factor[f]), .self$y[f], .self$w[f])
+
+    # out <- lapply(info$types, function(f) {
+    #   .self$summarize(info$factor[f], .self$y[f], .self$w[f])
+    # })
 
     out$Total <- colSums(do.call(rbind, out))
     out$Total[c("P(1)", "WoE", "Pred")] <- 0

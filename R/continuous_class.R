@@ -15,7 +15,7 @@ Continuous$methods(
     #browser()
     stopifnot(length(v) == 1)
 
-    f <- ! (is.na(x) | x %in% tf@exceptions$input)
+    f <- !(is.na(x) | x %in% as.numeric(names(tf@exceptions)))
 
     a <- min(max(1, v), length(tf@tf))  # can't be smaller than 1
     z <- max(min(v + 1, length(tf@tf)), a) # or larger than max els
@@ -46,7 +46,7 @@ Continuous$methods(factorize = function(newdata=.self$x, transform=.self$tf, ...
 
     lbls <- fmt_numeric_cuts(transform@tf)
     out <- factor(newdata, exclude=NULL,
-      levels=c(lbls, transform@exceptions$input, NA))
+      levels=c(lbls, names(transform@exceptions), NA))
 
     levels(out)[is.na(levels(out))] <- "Missing"
     out[f$normal] <- cut(newdata[f$normal], transform@tf, include.lowest = T,

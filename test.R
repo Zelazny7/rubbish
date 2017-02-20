@@ -1,9 +1,11 @@
 ## when bin is called again, need to overriwte args
 
 x <- titanic
-for (i in 1:8) x <- rbind(x, x)
+for (i in 1:10) x <- rbind(x, x)
 
-
+perf=Binary_Performance$new(y=x$Survived)
+perf$split(seg=titanic$Sex)
+perf$copy()
 b <- Continuous$new(name="Fare", x=x$Fare, perf=Binary_Performance$new(y=x$Survived))
 b$bin()
 b$neutralize(2:5)
@@ -30,19 +32,37 @@ classing <- readRDS("classing.rds")
 
 
 d <- Discrete$new(name="Pclass", x=titanic$Pclass, perf=Binary_Performance$new(y=titanic$Survived))
-d$bin()
+d$bin(exceptions=-1)
+d$predict()
 d$neutralize(1:3)
 d$reset()
 d$collapse(1:2)
 
 
 sc <- rubbish:::Scorecard$new(d=titanic, performance=Binary_Performance$new(y=titanic$Survived))
-sc$bin(mono=2, exceptions=-1, min.res=25, max.bin=5)
+sc$bin(mono=2, min.res=25, max.bin=5, exceptions=1:10)
+clust <- sc$cluster()
 
-fit <- sc$fit("model 1", nfolds=10)
-fit <- sc$fit("model 2", nfolds=10)
-fit <- sc$fit("model 3", nfolds=10)
+sc$fit("model 1", nfolds=10)
+sc$fit("model 2", nfolds=10)
+sc$fit("model 3", nfolds=10)
+
+sc2 <- sc$branch("model 3")
+sc2$fit("separate model", nfolds=10, alpha=1)
 
 sc$predict()
 
 sc$step["Embarked"] <- 3
+
+
+sc <- SegmentedScorecard$new()
+sc$bin(titanic, Binary_Performance$new(y=titanic$Survived), seg=titanic$Sex)
+sc$fit("model 2", nfolds=10)
+
+p1 <- sc$predict()
+p2 <- sc$predict(newdata=head(titanic), seg=head(titanic$Sex))
+
+
+p <- sc$predict()
+
+classing$bin(mono = 2, exceptions = -1)

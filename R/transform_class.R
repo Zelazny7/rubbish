@@ -3,21 +3,22 @@
 setClass("Transform", slots = c(
   tf = "ANY",
   subst = "numeric",
-  exceptions = "list",
+  exceptions = "numeric",
   nas = "numeric",
-  neutralized = "character")
+  neutralized = "character",
+  repr = "list")
 )
 
-setMethod("initialize", "Transform", function(.Object, ...) {
-  .Object@exceptions = list(input=numeric(), output=numeric())
-  validObject(.Object)
-  .Object
-})
+# setMethod("initialize", "Transform", function(.Object, ...) {
+#   .Object@exceptions = list(input=numeric(), output=numeric())
+#   validObject(.Object)
+#   .Object
+# })
 
 setMethod("neutralize_", signature = c(tf="Transform", i="numeric"),
   function(tf, i, ...) {
     # browser()
-    x <- c(names(tf@subst), tf@exceptions$input, names(tf@nas))
+    x <- c(names(tf@subst), tf@exceptions, names(tf@nas))
     new_tf <- tf
 
     ## ones that are already neutralized are UN-neutralized
@@ -27,10 +28,16 @@ setMethod("neutralize_", signature = c(tf="Transform", i="numeric"),
     new_tf
   })
 
-## replace inifnite prediction values with zeros
-# replace_infinite <- function(tf) {
-#   tf@subst[!is.finite(tf@subst)] <- 0
-#   tf@nas[!is.finite(tf@nas)] <- 0
-#   tf@exceptions$output[!is.finite(tf@exceptions$output)] <- 0
-#   tf
-# }
+update_transform <- function(tf, result) {
+
+  tf@subst <- setNames(result$normal[,"Pred"], row.names(result$normal))
+  tf@nas <- c(Missing=result$missing[,"Pred"])
+
+  exception_names <- row.names(result$exception)
+  tf@exceptions[exception_names] <- result$exception[,"Pred"]
+
+  tf@repr <- result
+  tf
+}
+
+

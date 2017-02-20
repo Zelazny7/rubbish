@@ -40,7 +40,7 @@ Scorecard$methods(fit = function(name, newdata=lapply(variables, function(b) b$x
 
   x <- predict(newdata=newdata, type="woe")
 
-  set.seed(sc$seed)
+  set.seed(seed)
   this_fit <- cv.glmnet(x = x, y = y, weights = w, nfolds = nfolds,
                         alpha = alpha, upper.limits=upper.limits,
                         lower.limits=lower.limits, penalty.factor = pf,
@@ -76,7 +76,7 @@ Scorecard$methods(predict = function(model=NULL, newdata=lapply(variables, funct
   mod <- models[[model]]
   woe <- callSuper(newdata=newdata, transforms=mod@transforms, ...)
 
-  glmnet::predict.cv.glmnet(object=mod@fit, newx=woe, ...)
+  glmnet::predict.cv.glmnet(object=mod@fit, newx=woe, type="link")
 
 })
 
@@ -86,3 +86,22 @@ Scorecard$methods(summary = function(model=NULL, ...) {
   if (is.null(model)) model <- models[[length(models)]]@name
   cat(sprintf("Showing summary for %s:", model), sep="\n")
 })
+
+
+Scorecard$methods(branch = function(model=NULL, ...) {
+  if (is.null(model)) model <- models[[length(models)]]@name
+  mod <- models[model]
+
+  ## deep copy and fill the variable list with the model transforms
+  sc <- copy()
+  sc$models <- mod
+
+  for (v in names(sc$variables)) {
+    sc$variables[[v]]$tf <- mod[[1]]@transforms[[v]]
+  }
+
+  sc
+
+})
+
+

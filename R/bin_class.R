@@ -8,9 +8,8 @@ Bin <- setRefClass("Bin",
     x = "NumericOrFactor",
     name = "character",
     perf = "Performance",
-    tf = "Transform",
+    tf = "Transform", ## current transform
     history = "list",
-    cache = "list",
     args = "list"
     ),
   contains = "VIRTUAL")
@@ -39,14 +38,10 @@ Bin$methods(update = function(...) {
     v
   })
 
-  ## need to make sure the names aren't dropping here
-  tf@subst <<- setNames(result$normal[,"Pred"], row.names(result$normal))
-  tf@nas <<- c(Missing=result$missing[,"Pred"])
-  tf@exceptions$output <<- result$exception[,"Pred"]
+  tf <<- update_transform(tf, result)
 
   ## append to the history and the cache
   history <<- c(history, list(tf))
-  cache <<- c(cache, list(result))
 
   show()
 })
@@ -79,20 +74,22 @@ Bin$methods(factorize = function(newdata=.self$x, transform=.self$tf, ..., n) {
   # }
 
   val_nas <- is.na(newdata)
-  val_exc <- newdata %in% transform@exceptions$input
+  val_exc <- newdata %in% as.numeric(names(transform@exceptions))
   val_nrm <- !(val_nas | val_exc)
   list(normal = val_nrm, exception = val_exc, missing = val_nas)
 })
 
-Bin$methods(show = function(N=length(.self$cache), ...) {
-  if (N == 0) stop("`bin` function not called yet.", call. = FALSE)
+Bin$methods(show = function(transform=.self$tf, ...) {
+  if (length(transform@repr) == 0) {
+    stop("`bin` function not called yet.", call. = FALSE)
+  }
 
-  out <- round(do.call(rbind, cache[[N]]), 3)
+  out <- round(do.call(rbind, transform@repr), 3)
 
-  i <- match(history[[N]]@neutralized, row.names(out), 0)
+  i <- match(transform@neutralized, row.names(out), 0)
 
   ## the ones that are no longer present get dropped
-  #tf@neutralized <<- tf@neutralized[i != 0]
+  tf@neutralized <<- tf@neutralized[i != 0]
 
   out[i, "Pred"] <- 0
 
@@ -100,17 +97,17 @@ Bin$methods(show = function(N=length(.self$cache), ...) {
   # out
 })
 
-## TODO: think about removing this...
+
 Bin$methods(undo = function(...) {
   if (length(history) == 0) {
     print("Nothing to undo")
   } else {
     tf <<- history[[length(history)]]
-    cache <<- head(cache, -1)
     history <<- head(history, -1)
   }
   show()
 })
+
 
 Bin$methods(reset = function(...) {
   do.call(perf$bin, c(list(b=.self), args))
@@ -119,11 +116,11 @@ Bin$methods(reset = function(...) {
 })
 
 
-
 ### move the definition to the transform class so it can do the unwrapping
 Bin$methods(set_equal = function(v1, v2, ...) {
   print("Implement this in the Transform Class")
 })
+
 
 Bin$methods(set_cutpoints = function(cuts, ...) {
   cuts <- sort(unique(c(-Inf, cuts, Inf)))
@@ -131,10 +128,12 @@ Bin$methods(set_cutpoints = function(cuts, ...) {
   update()
 })
 
+
 Bin$methods(neutralize = function(i, ...) {
   tf <<- neutralize_(tf, i)
-  update()
+  show()
 })
+
 
 Bin$methods(mono = function(m, ...) {
   args$mono <<- m
@@ -144,7 +143,7 @@ Bin$methods(mono = function(m, ...) {
 
 Bin$methods(exceptions = function(e, ...) {
   args$exceptions <<- e
-  tf@exceptions <<- list(input=e, output=numeric(0))
+  tf@exceptions <<- setNames(rep(0, length(e)), e)
   update()
 })
 
@@ -155,9 +154,9 @@ setMethod("plot_", c(.self="Bin"), function(.self, b, ...) {
 Bin$methods(plot = plot_)
 
 Bin$methods(predict = function(newdata=.self$x, transform=.self$tf, ...) {
-  # browser()
+  #browser()
   idx <- as.character(.self$factorize(newdata=newdata, transform=transform, ...)$factor)
-  out <- c(transform@subst, transform@nas, transform@exceptions$output)[idx]
+  out <- c(transform@subst, transform@nas, transform@exceptions)[idx]
   out[names(out) %in% transform@neutralized] <- 0
   unname(out)
 })

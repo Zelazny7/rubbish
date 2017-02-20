@@ -67,3 +67,12 @@ Classing$methods(drop = function(i, ...) {
   stopifnot(all(i %in% names(step)))
   step[i] <<- 3
 })
+
+Classing$methods(cluster = function(...) {
+  woe <- predict(model=NULL, type="woe", ...)
+  d <- apply(woe, 2, function(x) all(duplicated(x)[-1L]))
+  corr <- cor(woe[,-d])
+
+  list(correlations = corr, cluster = hclust(as.dist(1 - abs(corr))))
+
+})

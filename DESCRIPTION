@@ -25,5 +25,7 @@ Collate:
     'classing_class.R'
     'imports.R'
     'model_class.R'
+    'ops.R'
     'scorecard_class.R'
+    'segmented_class.R'
 RoxygenNote: 5.0.1
