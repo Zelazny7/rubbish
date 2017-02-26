@@ -13,10 +13,6 @@ Binary_Performance$methods(initialize =  function(y=.self$y, ...) {
   zeros <<- sum((y == 0) * w)
 })
 
-# Binary_Performance$methods(copy = function(...) {
-#   Binary_Performance$new()
-# })
-
 setMethod("bin_",
   signature = c(.self="Binary_Performance", b="Continuous"),
   function(.self, b, min.iv=0.01, min.cnt=10, min.res=0,
@@ -49,25 +45,23 @@ Binary_Performance$methods(summarize = function(x, y, w) {
   N1 <- tapply((y == 1) * w, x, sum)
   N0 <- tapply((y == 0) * w, x, sum)
 
-  N  <- tapply(w, x, sum)
-  P1  <- N1 / ones
-  P0  <- N0 / zeros
+  N <- tapply(w, x, sum)
+  P1 <- N1 / ones
+  P0 <- N0 / zeros
   WoE <- log(P1 / P0)
-  IV  <- (P1 - P0) * WoE
+  IV <- (P1 - P0) * WoE
 
   #c("N", "#1", "#0", "%N","%1","%0","P(1)","WoE","IV", "Pred")
-  cbind(N = N, `#1` = N1, `#0` = N0, `%N` = N / sum(ones, zeros),
+  res <- cbind(N = N, `#1` = N1, `#0` = N0, `%N` = N / sum(ones, zeros),
     `%1` = N1 / ones, `%0` = N0 / zeros, `P(1)` = N1 / N,
     WoE = WoE, IV = IV, Pred = WoE)
 
+  res[is.na(res) | is.infinite(res)] <- 0
+  res
+
 })
 
-setMethod(
-  "update_",
-  signature = c(.self="Binary_Performance", b="Bin"),
-  function(.self, b) {
-    #browser()
-    ## discretize the x var based on the bin type and the transform
+Binary_Performance$methods(update = function(b, ...) {
     info <- b$factorize()
 
     ## can now split x and y and w and calculate
@@ -82,17 +76,11 @@ setMethod(
     f <- info$types$missing
     out$missing <- .self$summarize(factor(info$factor[f]), .self$y[f], .self$w[f])
 
-    # out <- lapply(info$types, function(f) {
-    #   .self$summarize(info$factor[f], .self$y[f], .self$w[f])
-    # })
-
-    out$Total <- colSums(do.call(rbind, out))
+    out$Total <- colSums(do.call(rbind, out), na.rm=TRUE)
     out$Total[c("P(1)", "WoE", "Pred")] <- 0
     out
 
   })
-
-Binary_Performance$methods(update = update_)
 
 make_bars_ <- function(v, width=0.70, ...) {
   left <- pmin(v, 0)
@@ -104,13 +92,13 @@ make_bars_ <- function(v, width=0.70, ...) {
   center
 }
 
-setMethod(
-  "plot_",
-  signature = c(.self="Binary_Performance", b="Bin"),
-  function(.self, b) {
+Binary_Performance$methods(plot = function(b, ...) {
 
     #opar <- par()$oma # save the current settings
     on.exit(par(oma=rep(0, 4))) # restore them on exit
+
+
+    #browser()
 
     tmp <- head(b$show(), -1)
     lbls <- rev(row.names(tmp))
@@ -122,10 +110,10 @@ setMethod(
     xlim <- range(c(woe, val)) + c(-0.5, 0.5)
 
     ## set margin based on nchars
-    w <- max(nchar(lbls))
-    par(oma=c(0,w/6,0,0))
+    width <- max(nchar(lbls))
+    par(oma=c(0, width/6, 0, 0))
 
-    plot(NA, xlim=xlim, ylim=c(0.5, length(woe) + 0.5),
+    graphics::plot(NA, xlim=xlim, ylim=c(0.5, length(woe) + 0.5),
       xlab = "Weight of Evidence", ylab=NA, yaxt="n", main = b$name)
 
     abline(v = 0, lty=3)
@@ -142,6 +130,20 @@ setMethod(
 
   })
 
-Binary_Performance$methods(plot = plot_)
 
+Binary_Performance$methods(summary = function(tf, ...) {
+  ## return the information value of the bin
 
+  tot <- tf@repr$Total[c("IV", "N", "#1", "#0", "P(1)")]
+  nas <- unname(colSums(tf@repr$missing[,"N", drop=F], na.rm=T))
+  exc <- unname(colSums(tf@repr$exception[,"N", drop=F], na.rm=T))
+
+  out <- c(tot, "N missing"=nas, "N Exceptions"=exc)
+  out[is.na(out)] <- 0
+  out
+
+})
+
+Binary_Performance$methods(sort_value = function(b, ...) {
+  b$tf@repr$Total["IV"]
+})

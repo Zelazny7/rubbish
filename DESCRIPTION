@@ -22,10 +22,10 @@ Collate:
     'discrete_class.R'
     'continuous_class.R'
     'binary_performance_class.R'
+    'classing_adjust_method.R'
     'classing_class.R'
     'imports.R'
     'model_class.R'
     'ops.R'
     'scorecard_class.R'
-    'segmented_class.R'
 RoxygenNote: 5.0.1

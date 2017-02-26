@@ -24,28 +24,35 @@ neutralize_(b$tf, 2:3)
 levels(titanic$Embarked)[levels(titanic$Embarked) == ""] <- NA
 classing <- Classing$new(titanic, performance=Binary_Performance$new(y=titanic$Survived))
 classing$bin(mono = 2, exceptions = -1)
-classing$fit()
 
 
 saveRDS(classing, "classing.rds")
 classing <- readRDS("classing.rds")
 
 
-d <- Discrete$new(name="Pclass", x=titanic$Pclass, perf=Binary_Performance$new(y=titanic$Survived))
+d <- Discrete$new(name="Embarked", x=titanic$Embarked, perf=Binary_Performance$new(y=titanic$Survived))
 d$bin(exceptions=-1)
 d$predict()
 d$neutralize(1:3)
 d$reset()
 d$collapse(1:2)
 
+x <- titanic
+levels(x$Embarked)[levels(x$Embarked) == ""] <- "S"
 
-sc <- rubbish:::Scorecard$new(d=titanic, performance=Binary_Performance$new(y=titanic$Survived))
+sc <- rubbish:::Scorecard$new(d=x, performance=Binary_Performance$new(y=x$Survived))
 sc$bin(mono=2, min.res=25, max.bin=5, exceptions=1:10)
 clust <- sc$cluster()
 
 sc$fit("model 1", nfolds=10)
 sc$fit("model 2", nfolds=10)
 sc$fit("model 3", nfolds=10)
+
+sc$bin(mono=2, min.res=10)
+sc$fit("model 4", nfolds=10)
+
+sc$drop(c("Sex", "Fare"))
+sc$fit("model 5", nfolds=10)
 
 sc2 <- sc$branch("model 3")
 sc2$fit("separate model", nfolds=10, alpha=1)
@@ -55,14 +62,3 @@ sc$predict()
 sc$step["Embarked"] <- 3
 
 
-sc <- SegmentedScorecard$new()
-sc$bin(titanic, Binary_Performance$new(y=titanic$Survived), seg=titanic$Sex)
-sc$fit("model 2", nfolds=10)
-
-p1 <- sc$predict()
-p2 <- sc$predict(newdata=head(titanic), seg=head(titanic$Sex))
-
-
-p <- sc$predict()
-
-classing$bin(mono = 2, exceptions = -1)

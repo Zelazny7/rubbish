@@ -42,7 +42,7 @@ Classing$methods(show = function() {
 })
 
 Classing$methods(predict = function(newdata=lapply(variables, function(b) b$x),
-  transforms=lapply(variables, function(b) b$tf), ...) {
+  transforms=get_transforms(.self), ...) {
 
   ## check that data has var names
   stopifnot(!is.null(names(newdata)))
@@ -75,4 +75,33 @@ Classing$methods(cluster = function(...) {
 
   list(correlations = corr, cluster = hclust(as.dist(1 - abs(corr))))
 
+})
+
+Classing$methods(sort = function(method=c("perf", "cluster", "alpha")) {
+  method <- match.arg(method)
+
+  switch(
+    method,
+    "perf" = {
+      v <- sapply(variables, function(x) x$sort_value())
+      i <- order(v, decreasing = TRUE, na.last = TRUE)
+    },
+    "default" = {
+      print("not implemented")
+    }
+  )
+
+  variables <<- variables[i]
+  step <<- step[i]
+
+})
+
+get_transforms <- function(classing) {
+  lapply(classing$variables, function(x) x$tf)
+}
+
+Classing$methods(summary = function(tfs=get_transforms(.self), ...) {
+  s <- lapply(names(variables), function(n) variables[[n]]$summary(tfs[[n]]))
+  out <- do.call(rbind, s)
+  cbind(out, step=step)
 })

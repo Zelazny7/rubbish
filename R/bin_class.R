@@ -9,7 +9,7 @@ Bin <- setRefClass("Bin",
     name = "character",
     perf = "Performance",
     tf = "Transform", ## current transform
-    history = "list",
+    history = "list", ## current + all previous transforms
     args = "list"
     ),
   contains = "VIRTUAL")
@@ -21,16 +21,9 @@ Bin$methods(initialize = function(name="Unknown", x, perf, ...) {
   stopifnot(length(x) == length(perf$y))
 })
 
-setMethod(
-  "update_",
-  signature = c(.self="Bin"),
-  function(.self, ...) {
-    callGeneric(.self$perf, b = .self, ...)
-  })
-
 Bin$methods(update = function(...) {
-  # browser()
-  result <- update_(.self)
+
+  result <- perf$update(b = .self)
 
   ## do it in the result!
   result <- lapply(result, function(v) {
@@ -60,19 +53,7 @@ Bin$methods(expand = function(...) {
   update()
 })
 
-
-# Bin$methods(select = function(n) {
-#   n <- max(min(n, length(history)), 1)
-#   history <<- c(history, list(history[[n]]))
-#   cache <<- c(cache, list(cache[[n]]))
-#   tf <<- history[[n]]
-# })
-
 Bin$methods(factorize = function(newdata=.self$x, transform=.self$tf, ..., n) {
-  # if (!missing(n)) {
-  #   select(n)
-  # }
-
   val_nas <- is.na(newdata)
   val_exc <- newdata %in% as.numeric(names(transform@exceptions))
   val_nrm <- !(val_nas | val_exc)
@@ -99,9 +80,7 @@ Bin$methods(show = function(transform=.self$tf, ...) {
 
 
 Bin$methods(undo = function(...) {
-  if (length(history) == 0) {
-    print("Nothing to undo")
-  } else {
+  if (length(history) > 0) {
     tf <<- history[[length(history)]]
     history <<- head(history, -1)
   }
@@ -147,32 +126,27 @@ Bin$methods(exceptions = function(e, ...) {
   update()
 })
 
-setMethod("plot_", c(.self="Bin"), function(.self, b, ...) {
-  .self$perf$plot(.self)
+Bin$methods(plot = function(...) {
+  perf$plot(b = .self)
 })
 
-Bin$methods(plot = plot_)
-
 Bin$methods(predict = function(newdata=.self$x, transform=.self$tf, ...) {
-  #browser()
   idx <- as.character(.self$factorize(newdata=newdata, transform=transform, ...)$factor)
   out <- c(transform@subst, transform@nas, transform@exceptions)[idx]
   out[names(out) %in% transform@neutralized] <- 0
   unname(out)
 })
 
-
 ## remove this later. just for testing purposes
 Bin$methods(save_to_disk = function(f, ...) {
   saveRDS(.self, f)
 })
 
-
-Bin$methods(summary = function(...) {
-
+Bin$methods(sort_value = function(...) {
+  perf$sort_value(b=.self)
 })
 
-
-# setMethod("show", "Bin", function(object) object$show())
-
-
+## summary should be tied to the performance
+Bin$methods(summary = function(tf=.self$tf, ...) {
+  perf$summary(tf = tf)
+})

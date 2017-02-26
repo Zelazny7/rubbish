@@ -1,21 +1,30 @@
 #' @include classing_class.R
 
+## TODO: method that checks if model is in the scorecard
+## Switch to a selection model, where there is always a HEAD,
+## but user can select previous model classings. Can switch back to HEAD
+
 #' @export Scorecard
 #' @exportClass Scorecard
 Scorecard <- setRefClass("Scorecard",
  fields = c(
    seed = "numeric",
-   models = "list"),
+   models = "list",
+   HEAD = "list",
+   selected_model = "character",
+   current = "logical"),
  contains = "Classing"
 )
 
 Scorecard$methods(initialize = function(..., seed=as.numeric(strftime(Sys.time(), format="%H%M%S"))) {
   seed <<- seed
+  current <<- TRUE
   callSuper(...)
 })
 
 add_model_ <- function(.self, mod) {
   .self$models[[mod@name]] <- mod
+  .self$select(mod@name)
 }
 
 Scorecard$methods(fit = function(name, newdata=lapply(variables, function(b) b$x),
@@ -50,45 +59,43 @@ Scorecard$methods(fit = function(name, newdata=lapply(variables, function(b) b$x
   m <- new("Model", name=name, fit=this_fit, step=step,
            transforms=lapply(variables, function(x) x$tf))
 
-  ## get the lengths of the variables
-
   add_model_(.self, m)
-  ## return the fit object
-  #fits[[length(fits) + 1]] <<- this_fit
 
 })
 
 Scorecard$methods(show = function(...) {
   ## show the models / coefs?
   cat(sprintf("%d models", length(models)), sep="\n")
-  cat(sprintf(" |-- %s", sapply(models, slot, "name")), sep="\n")
+  i <- rep("", length(models))
+  i[names(models) == selected_model] <- "*"
+  cat(sprintf(" |-- %s %s", sapply(models, slot, "name"), i), sep="\n")
 })
 
-Scorecard$methods(predict = function(model=NULL, newdata=lapply(variables, function(b) b$x), type="score", ...) {
+Scorecard$methods(predict = function(newdata=lapply(variables, function(b) b$x), type="score", ...) {
 
-  if (is.null(model) & type == "woe") {
-    return(callSuper(newdata=newdata, transforms=lapply(variables, function(b) b$tf), ...))
-  } else if (is.null(model)) {
-    model <- names(models)[[length(models)]]
+  woe <- callSuper(newdata=newdata, transforms=get_transforms(.self), ...)
+
+  if (type == "woe") {
+    return(woe)
   }
 
-  stopifnot(model %in% names(models))
-  mod <- models[[model]]
-  woe <- callSuper(newdata=newdata, transforms=mod@transforms, ...)
-
   glmnet::predict.cv.glmnet(object=mod@fit, newx=woe, type="link")
-
 })
 
 ## show summary for selected model
 ## NULL shows the most recently fit model
-Scorecard$methods(summary = function(model=NULL, ...) {
-  if (is.null(model)) model <- models[[length(models)]]@name
-  cat(sprintf("Showing summary for %s:", model), sep="\n")
+Scorecard$methods(summary = function(...) {
+  if (length(models) == 0) {
+    callSuper()
+  } else {
+    cat("Model Summary: ", selected_model, "\n")
+    callSuper()
+  }
 })
 
 
 Scorecard$methods(branch = function(model=NULL, ...) {
+  "completely copy a selected model"
   if (is.null(model)) model <- models[[length(models)]]@name
   mod <- models[model]
 
@@ -102,6 +109,33 @@ Scorecard$methods(branch = function(model=NULL, ...) {
 
   sc
 
+})
+
+Scorecard$methods(resume = function(...) {
+  "load the HEAD set of transforms and resume"
+
+  for (v in names(variables)) {
+    variables[[v]]$tf <<- HEAD[[v]]
+  }
+  current <<- TRUE
+  selected_model <<- character(0)
+})
+
+Scorecard$methods(select = function(model, ...) {
+  "select a model and load the transforms associated with it"
+
+  ## save the current state in Head
+  if (current) {
+    HEAD <<- get_transforms(.self)
+    current <<- FALSE
+  }
+
+  mod <- models[[model]]
+  selected_model <<- model
+
+  for (v in names(variables)) {
+    variables[[v]]$tf <<- mod@transforms[[v]]
+  }
 })
 
 
