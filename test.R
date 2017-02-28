@@ -44,15 +44,15 @@ sc <- rubbish:::Scorecard$new(d=x, performance=Binary_Performance$new(y=x$Surviv
 sc$bin(mono=2, min.res=25, max.bin=5, exceptions=1:10)
 clust <- sc$cluster()
 
-sc$fit("model 1", nfolds=10)
+sc$fit("model 1", "initial fit of model", nfolds=10)
 sc$fit("model 2", nfolds=10)
 sc$fit("model 3", nfolds=10)
 
 sc$bin(mono=2, min.res=10)
-sc$fit("model 4", nfolds=10)
+sc$fit("model 7", nfolds=10)
 
 sc$drop(c("Sex", "Fare"))
-sc$fit("model 5", nfolds=10)
+sc$fit("model 8", nfolds=10)
 
 sc2 <- sc$branch("model 3")
 sc2$fit("separate model", nfolds=10, alpha=1)

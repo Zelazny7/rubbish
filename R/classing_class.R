@@ -6,8 +6,7 @@ Classing <- setRefClass("Classing",
   fields = c(
     variables = "list",
     performance = "Performance",
-    step = "numeric") # step is 1, 2, or 3 depending on model inclusion level
-  )
+    step = "numeric"))
 
 setGeneric("create_bin", function(x, ...) callGeneric("create_bin"))
 
@@ -68,9 +67,15 @@ Classing$methods(drop = function(i, ...) {
   step[i] <<- 3
 })
 
-Classing$methods(cluster = function(...) {
+Classing$methods(cluster = function(drop=TRUE, ...) {
   woe <- predict(model=NULL, type="woe", ...)
   d <- apply(woe, 2, function(x) all(duplicated(x)[-1L]))
+
+  ## drop dropped vars as well
+  if (drop) {
+    d <- union(d, which(step == 3))
+  }
+
   corr <- cor(woe[,-d])
 
   list(correlations = corr, cluster = hclust(as.dist(1 - abs(corr))))
@@ -96,12 +101,13 @@ Classing$methods(sort = function(method=c("perf", "cluster", "alpha")) {
 
 })
 
-get_transforms <- function(classing) {
-  lapply(classing$variables, function(x) x$tf)
-}
+Classing$methods(get_transforms = function(...) {
+  lapply(variables, function(x) x$tf)
+})
 
-Classing$methods(summary = function(tfs=get_transforms(.self), ...) {
-  s <- lapply(names(variables), function(n) variables[[n]]$summary(tfs[[n]]))
+Classing$methods(summary = function(tfs=.self$get_transforms(), step=.self$step...) {
+  s <- lapply(variables, function(v) v$summary(tfs[[v$name]]))
   out <- do.call(rbind, s)
+
   cbind(out, step=step)
 })
