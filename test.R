@@ -60,5 +60,3 @@ sc2$fit("separate model", nfolds=10, alpha=1)
 sc$predict()
 
 sc$step["Embarked"] <- 3
-
-

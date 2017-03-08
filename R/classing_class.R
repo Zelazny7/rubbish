@@ -31,7 +31,11 @@ Classing$methods(initialize = function(d=NULL,
 })
 
 Classing$methods(bin = function(...) {
+
+  ## add progress barcols <- colnames(x)
+
   for (i in seq_along(variables)) {
+    progress_(i, length(variables), "Binning   ", variables[[i]]$name)
     variables[[i]]$bin(...)
   }
 })
@@ -57,8 +61,12 @@ Classing$methods(predict = function(newdata=lapply(variables, function(b) b$x),
   ## put the newdata in the same order as the variables
   i <- match(vnm, dnm)
 
-  mapply(function(b, v, tf) b$predict(newdata=v, transform=tf),
-         variables[i], newdata[i], transforms[i])
+  mapply(function(idx, b, v, tf) {
+    progress_(idx, length(variables), "Predicting", b$name)
+    b$predict(newdata=v, transform=tf)
+  },
+    seq_along(i), variables[i], newdata[i], transforms[i]
+  )
 
 })
 
