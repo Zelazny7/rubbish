@@ -38,7 +38,7 @@ Scorecard$methods(select = function(model, ...) {
   mod <- models[[model]]
   selected_model <<- model
 
-  for (v in names(variables)) {
+  for (v in names(mod@transforms)) {
     variables[[v]]$tf <<- mod@transforms[[v]]
   }
 })
@@ -105,6 +105,7 @@ Scorecard$methods(predict = function(newdata=.self$get_variables(), type="score"
     return(woe)
   }
 
+  mod <- models[[selected_model]]
   glmnet::predict.cv.glmnet(object=mod@fit, newx=woe, type="link")
 })
 
@@ -130,5 +131,8 @@ Scorecard$methods(resume = function(...) {
   selected_model <<- character(0)
 })
 
-
+#' @export
+Scorecard$methods(adjust = function(meta=NULL, ...) {
+  callSuper(meta=meta, ...)
+})
 

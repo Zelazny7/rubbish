@@ -36,7 +36,7 @@ Bin$methods(update = function(...) {
   ## append to the history and the cache
   history <<- c(history, list(tf))
 
-  show()
+  # show()
 })
 
 Bin$methods(bin = function(...) {
@@ -60,7 +60,7 @@ Bin$methods(factorize = function(newdata=.self$x, transform=.self$tf, ..., n) {
   list(normal = val_nrm, exception = val_exc, missing = val_nas)
 })
 
-Bin$methods(show = function(transform=.self$tf, ...) {
+Bin$methods(as.matrix = function(transform=.self$tf, ...) {
   if (length(transform@repr) == 0) {
     stop("`bin` function not called yet.", call. = FALSE)
   }
@@ -73,9 +73,14 @@ Bin$methods(show = function(transform=.self$tf, ...) {
   tf@neutralized <<- tf@neutralized[i != 0]
 
   out[i, "Pred"] <- 0
-
   out
-  # out
+})
+
+Bin$methods(show = function(...) {
+
+  cat(.self$name, sep="\n")
+  print(.self$as.matrix())
+
 })
 
 

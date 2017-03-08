@@ -91,7 +91,8 @@ Classing$methods(sort = function(method=c("perf", "cluster", "alpha")) {
       v <- sapply(variables, function(x) x$sort_value())
       i <- order(v, decreasing = TRUE, na.last = TRUE)
     },
-    "default" = {
+    {
+      i <- seq_along(variables)
       print("not implemented")
     }
   )

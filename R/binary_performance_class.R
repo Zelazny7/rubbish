@@ -100,7 +100,7 @@ Binary_Performance$methods(plot = function(b, ...) {
 
     #browser()
 
-    tmp <- head(b$show(), -1)
+    tmp <- head(b$as.matrix(), -1)
     lbls <- rev(row.names(tmp))
     woe <- rev(tmp[,"WoE"])
     val <- rev(tmp[,"Pred"])

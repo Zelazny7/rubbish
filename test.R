@@ -41,11 +41,11 @@ x <- titanic
 levels(x$Embarked)[levels(x$Embarked) == ""] <- "S"
 
 sc <- rubbish:::Scorecard$new(d=x, performance=Binary_Performance$new(y=x$Survived))
-sc$bin(mono=2, min.res=25, max.bin=5, exceptions=1:10)
+sc$bin()
 clust <- sc$cluster()
 
-sc$fit("model 1", "initial fit of model", nfolds=10)
-sc$fit("model 2", nfolds=10)
+sc$fit("model 1", "initial fit of model", nfolds=3)
+sc$fit("model 2", nfolds=5, lower.limits=-Inf)
 sc$fit("model 3", nfolds=10)
 
 sc$bin(mono=2, min.res=10)
