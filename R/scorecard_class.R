@@ -6,10 +6,13 @@ Scorecard <- setRefClass("Scorecard",
  fields = c(
    seed = "numeric",
    models = "list",
-   HEAD = "list",
+   #HEAD = "list",
    selected_model = "character",
    current = "logical"),
  contains = "Classing"
+ # methods = list(
+ #
+ # )
 )
 
 Scorecard$methods(initialize = function(..., seed=as.numeric(strftime(Sys.time(), format="%H%M%S"))) {
@@ -28,13 +31,6 @@ Scorecard$methods(select = function(model, ...) {
   "select a model and load the transforms associated with it"
 
   has_model(model)
-
-  ## save the current state in Head
-  if (current) {
-    HEAD <<- get_transforms(.self)
-    current <<- FALSE
-  }
-
   mod <- models[[model]]
   selected_model <<- model
 
@@ -47,6 +43,14 @@ Scorecard$methods(add_model = function(mod, ...) {
   models[[mod@name]] <<- mod
   select(mod@name)
 })
+
+Scorecard$methods(bin = function(...) {
+  callSuper(...)
+  HEAD <- new("Model", name="HEAD", description="", fit=NULL, step=step,
+              transforms=get_transforms())
+  add_model(HEAD)
+})
+
 
 Scorecard$methods(fit = function(name, description="", newdata=.self$get_variables(),
   y=performance$y, w=performance$w, nfolds=5, upper.limits=3, lower.limits=0,
@@ -77,8 +81,8 @@ Scorecard$methods(fit = function(name, description="", newdata=.self$get_variabl
                         exclude=which(step == 3), ...)
 
   ## store the last transforms
-  m <- new("Model", name=name, description=description, fit=this_fit, step=step,
-           transforms=get_transforms())
+  m <- new("Model", name=name, description=description, fit=this_fit,
+           step=step, transforms=get_transforms())
 
   add_model(m)
 
@@ -119,16 +123,6 @@ Scorecard$methods(summary = function(...) {
     cat("Model Summary: ", selected_model, "\n")
     callSuper(tfs=mod@transforms, step=mod@step)
   }
-})
-
-Scorecard$methods(resume = function(...) {
-  "load the HEAD set of transforms and resume"
-
-  for (v in names(variables)) {
-    variables[[v]]$tf <<- HEAD[[v]]
-  }
-  current <<- TRUE
-  selected_model <<- character(0)
 })
 
 #' @export

@@ -40,6 +40,10 @@ d$collapse(1:2)
 x <- titanic
 levels(x$Embarked)[levels(x$Embarked) == ""] <- "S"
 
+sc <- bin(x, y=x$Survived, w=x$Fare)
+adjust(sc)
+fit(sc)
+
 sc <- rubbish:::Scorecard$new(d=x, performance=Binary_Performance$new(y=x$Survived))
 sc$bin()
 clust <- sc$cluster()

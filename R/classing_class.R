@@ -18,16 +18,17 @@ setMethod("create_bin", "factor", function(x, ...) {
   Discrete$new(x = x, ...)
 })
 
-Classing$methods(initialize = function(d=NULL,
+Classing$methods(initialize = function(data=NULL,
   performance=Performance$new(), ...) {
 
   .self$performance <<- performance
+  vnames <- setNames(names(data), names(data))
 
-  variables <<- lapply(setNames(names(d), names(d)), function(nm) {
-    create_bin(x = d[[nm]], perf = performance, name = nm, ...)
+  variables <<- lapply(vnames, function(nm) {
+    create_bin(x = data[[nm]], perf = performance, name = nm, ...)
   })
 
-  step <<- setNames(rep(2, length(d)), names(d))
+  step <<- setNames(rep(2, length(data)), vnames)
 })
 
 Classing$methods(bin = function(...) {
