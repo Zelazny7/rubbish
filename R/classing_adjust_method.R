@@ -1,10 +1,9 @@
 #' @include classing_class.R
 
-#' @export
-Classing$methods(adjust = function(meta=NULL, ...) {
+Classing$methods(adjust = function(...) {
   i <- 1
 
-  while(i <= length(x)) {
+  while(i <= length(variables)) {
     cat("\014")
     variables[[i]]$show()
     variables[[i]]$plot()
@@ -16,17 +15,15 @@ Classing$methods(adjust = function(meta=NULL, ...) {
       cat(
         "binnr interactive commands:
         (Q)uit
-        (n)ext, (N)ext in model
-        (p)revious, (P)revious in model
+        (n)ext
+        (p)revious
         (g)oto
         (m)ono
         (e)xceptions
         (s)et equal
         (u)ndo
         (r)eset
-        (d)rop
-        (a)ssign reason code
-        (c)omment
+        (d)rop / undrop
         binnr bin operations
         != <#> : Neutralize level
         +  <#> : Expand level
@@ -35,30 +32,7 @@ Classing$methods(adjust = function(meta=NULL, ...) {
       cat("Press any key to continue")
       readLines(n=1)
       invisible()
-    # } else if (command == "c") {
-    #   cat("Enter a comment")
-    #   inp <- readLines(n=1)
-    #   invisible()
-    #   if (inp == "DELETE") {
-    #     out[[i]]$notes <- NULL
-    #   } else if (length(grep("\\S+", inp)) > 0) {
-    #     out[[i]]$notes <- paste(out[[i]]$notes, inp, sep="\n -")
-    #   }
-    # } else if (command == "a") {
-    #   cat("Enter position(optional) and reason code")
-    #   inp <- readLines(n=1)
-    #   invisible()
-    #   type1 <- grep("\\d+\\s+\\S+", inp) # check for matching input
-    #   type2 <- grep("^\\s*\\S+\\s*$", inp) # check for matching input
-    #   if (length(type1) > 0) {
-    #     inp <- strsplit(inp, "\\s+")
-    #     pos <- as.integer(inp[[1]][1])
-    #     aac <- (inp[[1]][2])
-    #     rcs(out[[i]])[pos] <- aac
-    #   } else if (length(type2) > 0) {
-    #     aac <- gsub("\\s", "", inp)
-    #     rcs(out[[i]]) <- aac
-    #   }
+
     } else if (command == "g") {
       cat("Goto variable:")
       v <- readLines(n = 1)
@@ -92,44 +66,54 @@ Classing$methods(adjust = function(meta=NULL, ...) {
         }
       }
     } else if (command == "d") {
-      step[names(variables)[i]] <<- 3
+
+      ## get current status
+      if (dropped[names(variables)[i]]) {
+        undrop(names(variables)[i])
+      } else {
+        drop(names(variables)[i])
+      }
+
     } else if (command == "m") {
+
       cat("Enter Monotonicity:")
       v <- readLines(n = 1)
       variables[[i]]$mono(v)
+
     } else if (command == "e") {
+
       cat("Enter Exceptions:")
       v <- readLines(n = 1)
       e <- eval(parse(text=v))
       if (is.numeric(e) | is.null(e)) {
         variables[[i]]$exceptions(e)
       }
+
     } else if (command == "s") {
+
       cat("Enter Level to Change:")
       v1 <- as.integer(readLines(n = 1))
       cat("Change WoE to which level?:")
       v2 <- as.integer(readLines(n = 1))
       variables[[i]]$set_equal(v1, v2)
+
     } else if (command == "n") {
       i <- i + 1
-    # } else if (command == "N") {
-    #   nv <- get.meta.attr(out, "new")
-    #   nvi <- which(nv) # index of the in-model
-    #   if (any(nv) & any(nvi > i)) i <- nvi[nvi > i][1]
     } else if (command == "p") {
       if (i > 1) {
         i <- i - 1
       } else {
         cat("\nAt beginning of list")
       }
-    # } else if (command == "P") {
-    #   nv <- get.meta.attr(out, "new")
-    #   nvi <- rev(which(nv)) # index of the last in model
-    #   if (any(nv) & any(nvi < i)) i <- nvi[nvi < i][1]
+
     } else if (command == "u") {
+
       variables[[i]]$undo()
+
     } else if (command == "r") {
+
       variables[[i]]$reset()
+
     } else {
       tryCatch({
         eval(parse(text=paste("variables[[i]]", command)))

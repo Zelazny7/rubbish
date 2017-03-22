@@ -9,13 +9,6 @@ setClass("Transform", slots = c(
   repr = "list")
 )
 
-# setMethod("initialize", "Transform", function(.Object, ...) {
-#   .Object@exceptions = list(input=numeric(), output=numeric())
-#   validObject(.Object)
-#   .Object
-# })
-
-
 neutralize_ <- function(tf, i) {
   x <- c(names(tf@subst), tf@exceptions, names(tf@nas))
   new_tf <- tf
@@ -26,19 +19,6 @@ neutralize_ <- function(tf, i) {
   new_tf@neutralized <- setdiff(union(tf@neutralized, x[i]), nix)
   new_tf
 }
-
-# setMethod("neutralize_", signature = c(tf="Transform", i="numeric"),
-#   function(tf, i, ...) {
-#     # browser()
-#     x <- c(names(tf@subst), tf@exceptions, names(tf@nas))
-#     new_tf <- tf
-#
-#     ## ones that are already neutralized are UN-neutralized
-#     nix <- intersect(tf@neutralized, x[i])
-#
-#     new_tf@neutralized <- setdiff(union(tf@neutralized, x[i]), nix)
-#     new_tf
-#   })
 
 update_transform <- function(tf, result) {
 

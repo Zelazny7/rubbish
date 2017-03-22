@@ -94,11 +94,8 @@ make_bars_ <- function(v, width=0.70, ...) {
 
 Binary_Performance$methods(plot = function(b, ...) {
 
-    #opar <- par()$oma # save the current settings
     on.exit(par(oma=rep(0, 4))) # restore them on exit
 
-
-    #browser()
 
     tmp <- head(b$as.matrix(), -1)
     lbls <- rev(row.names(tmp))
@@ -133,7 +130,6 @@ Binary_Performance$methods(plot = function(b, ...) {
 
 Binary_Performance$methods(summary = function(tf, ...) {
   ## return the information value of the bin
-
   tot <- tf@repr$Total[c("IV", "N", "#1", "#0", "P(1)")]
   nas <- unname(colSums(tf@repr$missing[,"N", drop=F], na.rm=T))
   exc <- unname(colSums(tf@repr$exception[,"N", drop=F], na.rm=T))

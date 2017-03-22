@@ -30,8 +30,8 @@ Continuous$methods(
 )
 
 fmt_numeric_cuts <- function(cuts) {
-  l = format(round(cuts, 2), trim=TRUE, nsmall=2, digits=2, big.mark=",",
-             scientific = FALSE)
+  l <- format(cuts, trim=TRUE, nsmall=3, digits=3, big.mark=",",
+    scientific = FALSE)
 
   ## get width of largest value
   fmt = sprintf("(%%%1$ds - %%%1$ds]", max(nchar(l)))

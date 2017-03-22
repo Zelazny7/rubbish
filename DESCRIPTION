@@ -30,4 +30,4 @@ Collate:
     'scorecard_class.R'
     'util.R'
     'wrapper_funcs.R'
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

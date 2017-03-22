@@ -35,12 +35,10 @@ Bin$methods(update = function(...) {
 
   ## append to the history and the cache
   history <<- c(history, list(tf))
-
-  # show()
 })
 
 Bin$methods(bin = function(...) {
-  .self$perf$bin(b=.self, ...)
+  perf$bin(b=.self, ...)
   args <<- modifyList(args, list(...))
   update()
 })
@@ -140,11 +138,6 @@ Bin$methods(predict = function(newdata=.self$x, transform=.self$tf, ...) {
   out <- c(transform@subst, transform@nas, transform@exceptions)[idx]
   out[names(out) %in% transform@neutralized] <- 0
   unname(out)
-})
-
-## remove this later. just for testing purposes
-Bin$methods(save_to_disk = function(f, ...) {
-  saveRDS(.self, f)
 })
 
 Bin$methods(sort_value = function(...) {

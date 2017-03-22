@@ -6,7 +6,7 @@ Classing <- setRefClass("Classing",
   fields = c(
     variables = "list",
     performance = "Performance",
-    step = "numeric"))
+    dropped = "logical"))
 
 setGeneric("create_bin", function(x, ...) callGeneric("create_bin"))
 
@@ -28,96 +28,118 @@ Classing$methods(initialize = function(data=NULL,
     create_bin(x = data[[nm]], perf = performance, name = nm, ...)
   })
 
-  step <<- setNames(rep(2, length(data)), vnames)
+  dropped <<- setNames(logical(length(data)), vnames)
 })
 
 Classing$methods(bin = function(...) {
-
-  ## add progress barcols <- colnames(x)
+  on.exit(cat(sep = "\n"))
 
   for (i in seq_along(variables)) {
     progress_(i, length(variables), "Binning   ", variables[[i]]$name)
     variables[[i]]$bin(...)
   }
+
+  ## drop vars with zero information value
+  zero_value <- sapply(variables, function(b) b$sort_value())
+  dropped[zero_value == 0] <<- TRUE
+
 })
 
 Classing$methods(show = function() {
   print("Classing object")
 })
 
-Classing$methods(predict = function(newdata=lapply(variables, function(b) b$x),
-  transforms=get_transforms(.self), ...) {
+Classing$methods(get_variables = function(..., keep=FALSE) {
+  if (!keep) {
+    lapply(variables[!dropped], function(x) x$x)
+  } else {
+    lapply(variables, function(x) x$x)
+  }
+})
+
+Classing$methods(get_transforms = function(..., keep=FALSE) {
+  if (!keep) {
+    lapply(variables[!dropped], function(x) x$tf)
+  } else {
+    lapply(variables, function(x) x$tf)
+  }
+})
+
+Classing$methods(predict = function(newdata=.self$get_variables(),
+  transforms=.self$get_transforms(), ...) {
+  on.exit(cat(sep = "\n"))
 
   ## check that data has var names
   stopifnot(!is.null(names(newdata)))
 
   ## check that all variables are found in newdata
   dnm <- names(newdata)
-  vnm <- names(variables)
+  vnm <- names(variables)[!dropped]
   if (!all(vnm %in% dnm)) {
-    msg <- paste0(vnm, collapse = ", ")
+    msg <- paste0(vnm[!vnm %in% dnm], collapse = ", ")
     stop(sprintf("Vars not found in data: %s", msg), call. = F)
   }
 
   ## put the newdata in the same order as the variables
-  i <- match(vnm, dnm)
+  i <- intersect(vnm, dnm)
 
-  mapply(function(idx, b, v, tf) {
-    progress_(idx, length(variables), "Predicting", b$name)
+  woe <- mapply(function(idx, b, v, tf) {
+    progress_(idx, length(vnm), "Predicting", b$name)
     b$predict(newdata=v, transform=tf)
   },
     seq_along(i), variables[i], newdata[i], transforms[i]
   )
 
+  colnames(woe) <- i
+  woe
+
 })
 
 Classing$methods(drop = function(i, ...) {
-  stopifnot(all(i %in% names(step)))
-  step[i] <<- 3
+  stopifnot(all(i %in% names(dropped)))
+  dropped[i] <<- TRUE
 })
 
-Classing$methods(cluster = function(drop=TRUE, ...) {
-  woe <- predict(model=NULL, type="woe", ...)
-  d <- apply(woe, 2, function(x) all(duplicated(x)[-1L]))
-
-  ## drop dropped vars as well
-  if (drop) {
-    d <- union(d, which(step == 3))
-  }
-
-  corr <- cor(woe[,-d])
-
-  list(correlations = corr, cluster = hclust(as.dist(1 - abs(corr))))
-
+Classing$methods(undrop = function(i, ...) {
+  stopifnot(all(i %in% names(dropped)))
+  dropped[i] <<- FALSE
 })
 
-Classing$methods(sort = function(method=c("perf", "cluster", "alpha")) {
-  method <- match.arg(method)
+Classing$methods(cluster = function(keep=FALSE, ...) {
+  woe <- predict(newdata=get_variables(keep = keep), type="woe", ...)
+  dups <- apply(woe, 2, function(x) all(duplicated(x)[-1L]))
 
-  switch(
-    method,
-    "perf" = {
-      v <- sapply(variables, function(x) x$sort_value())
-      i <- order(v, decreasing = TRUE, na.last = TRUE)
-    },
-    {
-      i <- seq_along(variables)
-      print("not implemented")
-    }
-  )
+  corr <- cor(woe[,which(!dups)])
 
-  variables <<- variables[i]
-  step <<- step[i]
+  structure(
+    list(
+      correlations = corr,
+      cluster = hclust(as.dist(1 - abs(corr)))),
+    class="classing_cluster")
 
 })
 
-Classing$methods(get_transforms = function(...) {
-  lapply(variables, function(x) x$tf)
+Classing$methods(prune_clusters =  function(cc, corr=0.80, n=1) {
+  stopifnot(is(cc, "classing_cluster"))
+
+  ## get information values
+  p <- sapply(variables[colnames(cc$correlations)], function(x) x$sort_value())
+
+  ## cutree
+  grps <- cutree(cc$cluster, h=1-corr)
+
+  # split correlations into groups and return everyone after the first
+  splt <- split(data.frame(var=names(grps), val=p, stringsAsFactors = F), grps)
+
+  ## order each group by descending perf value and drop all but the first
+  to_drop <- lapply(splt, function(x) x$var[order(-x$val)][-seq.int(n)])
+  unlist(to_drop)
 })
 
-Classing$methods(summary = function(tfs=.self$get_transforms(), step=.self$step...) {
-  s <- lapply(variables, function(v) v$summary(tfs[[v$name]]))
-  out <- do.call(rbind, s)
 
-  cbind(out, step=step)
+Classing$methods(summary = function(...) {
+  s <- lapply(variables, function(v) v$summary())
+  res <- do.call(rbind, s)
+  cbind(res, `Dropped`=dropped)
 })
+
