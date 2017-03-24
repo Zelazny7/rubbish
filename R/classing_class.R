@@ -18,6 +18,10 @@ setMethod("create_bin", "factor", function(x, ...) {
   Discrete$new(x = x, ...)
 })
 
+setMethod("create_bin", "ANY", function(x, ...) {
+  NULL
+})
+
 Classing$methods(initialize = function(data=NULL,
   performance=Performance$new(), ...) {
 
@@ -28,7 +32,9 @@ Classing$methods(initialize = function(data=NULL,
     create_bin(x = data[[nm]], perf = performance, name = nm, ...)
   })
 
-  dropped <<- setNames(logical(length(data)), vnames)
+  ## drop variables that aren't numeric or factors
+  variables <<- variables[lengths(variables) > 0]
+  dropped <<- setNames(logical(length(variables)), names(variables))
 })
 
 Classing$methods(bin = function(...) {
@@ -50,16 +56,21 @@ Classing$methods(show = function() {
 })
 
 Classing$methods(get_variables = function(..., keep=FALSE) {
+
+  k <- which(!dropped[names(variables)])
+
   if (!keep) {
-    lapply(variables[!dropped], function(x) x$x)
+    lapply(variables[k], function(x) x$x)
   } else {
     lapply(variables, function(x) x$x)
   }
 })
 
 Classing$methods(get_transforms = function(..., keep=FALSE) {
+  k <- which(!dropped[names(variables)])
+
   if (!keep) {
-    lapply(variables[!dropped], function(x) x$tf)
+    lapply(variables[k], function(x) x$tf)
   } else {
     lapply(variables, function(x) x$tf)
   }
@@ -74,23 +85,21 @@ Classing$methods(predict = function(newdata=.self$get_variables(),
 
   ## check that all variables are found in newdata
   dnm <- names(newdata)
-  vnm <- names(variables)[!dropped]
+  vnm <- names(which(!dropped[names(variables)]))
+
   if (!all(vnm %in% dnm)) {
     msg <- paste0(vnm[!vnm %in% dnm], collapse = ", ")
     stop(sprintf("Vars not found in data: %s", msg), call. = F)
   }
 
   ## put the newdata in the same order as the variables
-  i <- intersect(vnm, dnm)
-
   woe <- mapply(function(idx, b, v, tf) {
     progress_(idx, length(vnm), "Predicting", b$name)
     b$predict(newdata=v, transform=tf)
   },
-    seq_along(i), variables[i], newdata[i], transforms[i]
-  )
+    seq_along(vnm), variables[vnm], newdata[vnm], transforms[vnm])
 
-  colnames(woe) <- i
+  colnames(woe) <- vnm
   woe
 
 })
@@ -140,6 +149,6 @@ Classing$methods(prune_clusters =  function(cc, corr=0.80, n=1) {
 Classing$methods(summary = function(...) {
   s <- lapply(variables, function(v) v$summary())
   res <- do.call(rbind, s)
-  cbind(res, `Dropped`=dropped)
+  cbind(res, `Dropped`=dropped[row.names(res)])
 })
 

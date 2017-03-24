@@ -1,12 +1,13 @@
 #' @include generic_methods.R
 
 setClass("Transform", slots = c(
-  tf = "ANY",
-  subst = "numeric",
-  exceptions = "numeric",
-  nas = "numeric",
-  neutralized = "character",
-  repr = "list")
+    tf = "ANY",
+    subst = "numeric",
+    exceptions = "numeric",
+    nas = "numeric",
+    neutralized = "character",
+    repr = "list"),
+  prototype = list(nas = c(Missing=0))
 )
 
 neutralize_ <- function(tf, i) {

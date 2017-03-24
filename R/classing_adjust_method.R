@@ -6,6 +6,10 @@ Classing$methods(adjust = function(...) {
   while(i <= length(variables)) {
     cat("\014")
     variables[[i]]$show()
+
+    cat(sprintf("\n [In Model: %5s | Dropped: %5s]",
+      inmodel[i], dropped[i]), sep = "\n")
+
     variables[[i]]$plot()
     cat ("\nEnter command (Q to quit):")
     command <- readLines(n = 1)

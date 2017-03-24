@@ -76,8 +76,16 @@ Bin$methods(as.matrix = function(transform=.self$tf, ...) {
 
 Bin$methods(show = function(...) {
 
+  m <- .self$as.matrix()
+
+  ## add row labels
+  lbls <- sprintf("[%02d]  ", seq.int(nrow(m)))
+  lbls[length(lbls)] <- ""
+
+  row.names(m) <- paste0(lbls, row.names(m))
+
   cat(.self$name, sep="\n")
-  print(.self$as.matrix())
+  print(m)
 
 })
 
@@ -147,4 +155,9 @@ Bin$methods(sort_value = function(...) {
 ## summary should be tied to the performance
 Bin$methods(summary = function(tf=.self$tf, ...) {
   perf$summary(tf = tf)
+})
+
+
+Bin$methods(sas = function(coef=1, ...) {
+
 })

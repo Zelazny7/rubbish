@@ -6,4 +6,6 @@ setClass("Model", slots = c(
   transforms = "list",
   dropped = "logical",
   coefs = "numeric",
-  inmodel = "logical"))
+  inmodel = "logical",
+  contribution = "numeric",
+  ks = "numeric"))

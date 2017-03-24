@@ -28,12 +28,14 @@ Scorecard$methods(select = function(model, ...) {
   has_model(model)
   mod <- models[[model]]
   selected_model <<- model
+
   dropped <<- mod@dropped
   inmodel <<- mod@inmodel
 
   for (v in names(mod@transforms)) {
     variables[[v]]$tf <<- mod@transforms[[v]]
   }
+
 })
 
 Scorecard$methods(add_model = function(mod, ...) {
@@ -51,7 +53,7 @@ Scorecard$methods(bin = function(...) {
 
 Scorecard$methods(fit = function(name, description="", newdata=.self$get_variables(),
   y=performance$y, w=performance$w, nfolds=5, upper.limits=3, lower.limits=0,
-  alpha=1, ...) {
+  alpha=1, family="binomial", ...) {
 
   ## check names of newdata here... TODO
 
@@ -63,24 +65,30 @@ Scorecard$methods(fit = function(name, description="", newdata=.self$get_variabl
     if (ans == "No") break
   }
 
-  x <- predict(newdata=newdata, type="woe")
+  v <- names(which(!dropped))
+  x <- predict(newdata=newdata[v], type="woe")
 
   set.seed(seed)
   this_fit <- cv.glmnet(x = x, y = y, weights = w, nfolds = nfolds,
-                        alpha = alpha, upper.limits=upper.limits,
-                        lower.limits=lower.limits, ...)
+    family=family, alpha=alpha, upper.limits=upper.limits,
+    lower.limits=lower.limits, keep=TRUE, ...)
 
   ## get the coeficients
   coefs <- coef(this_fit, s="lambda.min")[,1]
+  coefs <- coefs[which(coefs != 0)]
 
   ## set the inmodel vector
   inmodel <<- setNames(logical(length(variables)), names(variables))
-  inmodel[names(which(coefs[-1] != 0))] <<- TRUE
+  inmodel[names(coefs)[-1]] <<- TRUE
+
+  ## performance metrics
+  contr <- contributions_(x[,names(coefs)[-1]], coefs, y, w)
+  ks <- ks_(this_fit$fit.preval[,which.min(this_fit$cvm)], y, w) # kfold
 
   ## store the last transforms
   m <- new("Model", name=name, description=description, fit=this_fit,
            dropped=dropped, transforms=get_transforms(), coefs=coefs,
-           inmodel=inmodel)
+           inmodel=inmodel, contribution=contr, ks=ks)
 
   add_model(m)
 
@@ -104,45 +112,42 @@ Scorecard$methods(predict = function(newdata=.self$get_variables(), type="score"
   }
 
   mod <- models[[selected_model]]
-  glmnet::predict.cv.glmnet(object=mod@fit, newx=woe, type="link")
+  v <- names(mod@coefs[-1])
+
+  woe[,v] %*% mod@coefs[v] + mod@coefs[1]
+  # glmnet::predict.cv.glmnet(object=mod@fit, newx=woe, type="link")
 })
 
 ## show summary for selected model
 Scorecard$methods(summary = function(...) {
 
-  cat("Model Summary: ", selected_model, "\n")
+  mod <- models[[selected_model]]
+
+  cat(mod@name, "\nOut-of-Fold KS: ", mod@ks, "\n")
+
   res <- callSuper(tfs = get_transforms(keep=TRUE))
-  cbind(res, `In Model` = inmodel, `Coefs` = models[[selected_model]]@coefs[row.names(res)])
+  vars <- row.names(res)
+
+  cbind(res, `In Model` = inmodel[vars], `Coefs` = mod@coefs[vars],
+    `Contribution` = mod@contribution[vars])
 })
 
 Scorecard$methods(adjust = function(...) {
   callSuper(...)
 })
 
-Scorecard$methods(sort = function(method=c("perf", "cluster", "alpha"), ...) {
-  method <- match.arg(method)
+Scorecard$methods(sort = function(...) {
 
-  switch(
-    method,
-    "perf" = {
-      v <- sapply(variables, function(x) x$sort_value())
-      i <- order(inmodel, -dropped, v,
-        decreasing = TRUE, na.last = TRUE)
-    },
-    {
-      i <- seq_along(variables)
-      print("not implemented")
-    }
-  )
+  v <- sapply(variables, function(x) x$sort_value())
+  i <- order(inmodel[names(variables)], -dropped[names(variables)], v,
+    decreasing = TRUE, na.last = TRUE)
 
   variables <<- variables[i]
-  dropped <<- dropped[i]
-  inmodel <<- inmodel[i]
 
 })
 
-Scorecard$methods(psuedo_pvalues = function(times=20, bag.fraction = 0.50,
-  nfolds=5, upper.limits=3, lower.limits=0, alpha=1, ...) {
+Scorecard$methods(pseudo_pvalues = function(times=20, bag.fraction = 0.50,
+  replace=FALSE,  nfolds=5, upper.limits=3, lower.limits=0, alpha=1, ...) {
 
   x <- predict(newdata=get_variables(), type="woe")
 
@@ -150,7 +155,7 @@ Scorecard$methods(psuedo_pvalues = function(times=20, bag.fraction = 0.50,
   for (i in seq.int(times)) {
     progress_(i, times, "Fitting")
 
-    s <- sample.int(nrow(x), nrow(x)*bag.fraction)
+    s <- sample.int(nrow(x), nrow(x)*bag.fraction, replace = replace)
 
     fit <- glmnet::cv.glmnet(x = x[s,], y = performance$y[s],
       weights = performance$w[s], nfolds = 10, alpha = alpha,
@@ -169,4 +174,72 @@ Scorecard$methods(psuedo_pvalues = function(times=20, bag.fraction = 0.50,
       pvalues = pvals,
       coefs = res),
     class = "psuedo_pvalues")
+})
+
+Scorecard$methods(compare = function(...) {
+  mods <- unlist(list(...))
+
+  ## check that requested models are in the scorecard
+  stopifnot(all(mods %in% names(models)))
+
+  on.exit(select(selected_model))
+
+  ## select each and get the summary
+  summaries <- lapply(mods, function(x) {
+
+    select(x)
+    res <- summary()
+    res[,c("IV","Dropped","In Model","Coefs","Contribution")]
+
+  })
+
+  ## merge them all
+  contribution <- lapply(summaries, function(x) x[,"Contribution"])
+  coefficients <- lapply(summaries, function(x) x[,"Coefs"])
+
+  # merge helper for use with Reduce
+  merge_ <- function(a, b) {
+    tmp <- merge(a,b, by=0, all=T)
+    row.names(tmp) <- tmp$Row.names
+    subset(tmp, select = -Row.names)
+  }
+
+  res <- merge(
+    Reduce(merge_, contribution),
+    Reduce(merge_, coefficients), by=0, all=T)
+
+  cols <- c("Contribution", "Coefficients")
+  colnames(res) <- c("Variable", paste(rep(cols, each=length(mods)), mods))
+
+  res[order(-res[2], na.last = TRUE),]
+
+})
+
+
+Scorecard$methods(gen_code_sas = function(pfx="", method="min", ...) {
+
+  mod <- models[[selected_model]]
+
+  v <- names(which(mod@inmodel))
+  coefs <- mod@coefs[-1][v]
+
+  ## Print the reason code mappings
+  out <- "/** Adverse Action Code Mappings **/"
+  out <- c(out, lapply(seq_along(v), function(i) {
+    sprintf("%%let %s_AA_%02d = \"\"; /** %s **/", pfx, i, v[i])
+  }))
+
+  ### Print the variables
+  out <- c(out, lapply(seq_along(v), function(i) {
+    variables[[v[i]]]$gen_code_sas(method=method, pfx=pfx, coef=coefs[i])
+  }))
+
+  out <- c(out,
+    sprintf("\n/*** Final Score Calculation ***/"),
+    sprintf("%s_lgt = %s", pfx, mod@coefs[1]),
+    sprintf("  + %s_V%02d_w", pfx, seq_along(v)),
+    ";")
+
+  unlist(out)
+
 })
