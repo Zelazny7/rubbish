@@ -19,7 +19,6 @@ Continuous$methods(collapse = function(v) {
 
 Continuous$methods(expand = function(v) {
 
-    #browser()
     stopifnot(length(v) == 1)
 
     f <- !(is.na(x) | x %in% as.numeric(names(tf@exceptions)))
@@ -39,7 +38,6 @@ Continuous$methods(expand = function(v) {
 
 Continuous$methods(fmt_numeric_cuts = function(...) {
   l <- uniq[pmax(1, findInterval(tf@tf, uniq, all.inside = TRUE))]
-  l <- round(l, 3)
   fmt <- sprintf("(%%%1$ds - %%%1$ds]", max(nchar(l)))
   sprintf(fmt, head(l, -1), tail(l, -1))
 })
@@ -52,7 +50,7 @@ Continuous$methods(factorize = function(newdata=.self$x, transform=.self$tf, ...
 
   f <- callSuper(newdata=newdata, transform=transform, ...)
 
-  lbls <- fmt_numeric_cuts(transform@tf)
+  lbls <- fmt_numeric_cuts()
   out <- factor(newdata, exclude=NULL,
     levels=c(lbls, names(transform@exceptions), NA))
 

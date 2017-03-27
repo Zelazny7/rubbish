@@ -28,6 +28,14 @@ Bin$methods(update = function(...) {
   ## do it in the result!
   result <- lapply(result, function(v) {
     v[!is.finite(v)] <- 0
+
+    if (nrow(v) > 0) {
+
+      ## find witch levels are in the overrides
+      i <- intersect(names(tf@overrides), row.names(v))
+      v[i, "Pred"] <- tf@overrides[i]
+      print(tf@overrides[i])
+    }
     v
   })
 
@@ -58,19 +66,13 @@ Bin$methods(factorize = function(newdata=.self$x, transform=.self$tf, ..., n) {
   list(normal = val_nrm, exception = val_exc, missing = val_nas)
 })
 
-Bin$methods(as.matrix = function(transform=.self$tf, ...) {
-  if (length(transform@repr) == 0) {
+Bin$methods(as.matrix = function(tf=.self$tf, ...) {
+  if (length(tf@repr) == 0) {
     stop("`bin` function not called yet.", call. = FALSE)
   }
 
-  out <- round(do.call(rbind, transform@repr), 3)
+  out <- round(do.call(rbind, tf@repr), 3)
 
-  i <- match(transform@neutralized, row.names(out), 0)
-
-  ## the ones that are no longer present get dropped
-  tf@neutralized <<- tf@neutralized[i != 0]
-
-  out[i, "Pred"] <- 0
   out
 })
 
@@ -91,9 +93,12 @@ Bin$methods(show = function(...) {
 
 
 Bin$methods(undo = function(...) {
-  if (length(history) > 0) {
-    tf <<- history[[length(history)]]
+  if (length(history) > 1) {
+    tf <<- history[[length(history) - 1]]
     history <<- head(history, -1)
+  } else {
+    tf <<- history[[1]]
+    history <<- list()
   }
   show()
 })
@@ -102,13 +107,14 @@ Bin$methods(undo = function(...) {
 Bin$methods(reset = function(...) {
   do.call(perf$bin, c(list(b=.self), args))
   tf@neutralized <<- character(0)
+  tf@set_equal <<- numeric(0)
   update()
 })
 
 
-### move the definition to the transform class so it can do the unwrapping
 Bin$methods(set_equal = function(v1, v2, ...) {
-  print("Implement this in the Transform Class")
+  tf <<- set_equal_(tf, v1, v2)
+  update()
 })
 
 
@@ -121,7 +127,7 @@ Bin$methods(set_cutpoints = function(cuts, ...) {
 
 Bin$methods(neutralize = function(i, ...) {
   tf <<- neutralize_(tf, i)
-  show()
+  update()
 })
 
 
@@ -142,9 +148,12 @@ Bin$methods(plot = function(...) {
 })
 
 Bin$methods(predict = function(newdata=.self$x, transform=.self$tf, ...) {
-  idx <- as.character(.self$factorize(newdata=newdata, transform=transform, ...)$factor)
+  idx <- as.character(factorize(newdata=newdata, transform=transform, ...)$factor)
   out <- c(transform@subst, transform@nas, transform@exceptions)[idx]
-  out[names(out) %in% transform@neutralized] <- 0
+
+  i <- intersect(names(out), names(transform@overrides))
+  out[i] <- transform@overrides[i]
+
   unname(out)
 })
 

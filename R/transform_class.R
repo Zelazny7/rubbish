@@ -5,7 +5,7 @@ setClass("Transform", slots = c(
     subst = "numeric",
     exceptions = "numeric",
     nas = "numeric",
-    neutralized = "character",
+    overrides = "numeric",
     repr = "list"),
   prototype = list(nas = c(Missing=0))
 )
@@ -15,10 +15,27 @@ neutralize_ <- function(tf, i) {
   new_tf <- tf
 
   ## ones that are already neutralized are UN-neutralized
-  nix <- intersect(tf@neutralized, x[i])
+  neutral <- names(which(tf@overrides == 0))
+  nix <- intersect(neutral, x[i])
 
-  new_tf@neutralized <- setdiff(union(tf@neutralized, x[i]), nix)
+  overrides <- setdiff(x[i], nix)
+
+  new_tf@overrides[overrides] <- 0
+
   new_tf
+}
+
+set_equal_ <- function(tf, v1, v2) {
+
+  x <- c(tf@subst, tf@exceptions, tf@nas)
+  new_tf <- tf
+
+  overrides <- setNames(x[v2], names(x)[v1])
+
+  new_tf@overrides[names(overrides)] <- overrides
+
+  new_tf
+
 }
 
 update_transform <- function(tf, result) {
@@ -30,7 +47,7 @@ update_transform <- function(tf, result) {
   tf@exceptions[exception_names] <- result$exception[,"Pred"]
 
   tf@repr <- result
+
   tf
 }
-
 

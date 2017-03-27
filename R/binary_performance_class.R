@@ -32,8 +32,6 @@ setMethod("bin_",
   signature = c(.self="Binary_Performance", b="Discrete"),
   function(.self, b, exceptions=numeric(0), ...) {
 
-    #browser()
-
     b$tf@tf <- as.list(levels(b$x))
     names(b$tf@tf) <- levels(b$x)
     b$tf@exceptions <- setNames(rep(0, length(exceptions)), exceptions)
@@ -67,17 +65,18 @@ Binary_Performance$methods(update = function(b, ...) {
     ## can now split x and y and w and calculate
     out <- list()
     f <- info$types$normal
-    out$normal <- .self$summarize(factor(info$factor[f]), .self$y[f], .self$w[f])
+    out$normal <- summarize(factor(info$factor[f]), y[f], w[f])
 
     f <- info$types$exception
-    out$exception <- .self$summarize(factor(info$factor[f],
-      levels=names(b$tf@exceptions)), .self$y[f], .self$w[f])
+    out$exception <- summarize(factor(info$factor[f],
+      levels=names(b$tf@exceptions)), y[f], w[f])
 
     f <- info$types$missing
-    out$missing <- .self$summarize(factor(info$factor[f]), .self$y[f], .self$w[f])
+    out$missing <- summarize(factor(info$factor[f]), y[f], w[f])
 
-    out$Total <- colSums(do.call(rbind, out), na.rm=TRUE)
-    out$Total[c("P(1)", "WoE", "Pred")] <- 0
+    out$Total <- matrix(colSums(do.call(rbind, out), na.rm=TRUE), nrow=1,
+      dimnames = list(NULL, colnames(out$normal)))
+    out$Total[,c("P(1)", "WoE", "Pred")] <- 0
     out
 
   })
