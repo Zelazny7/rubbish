@@ -2,12 +2,10 @@
 
 #' @export Continuous
 #' @exportClass Continuous
-Continuous <- setRefClass("Continuous", fields=c(uniq="numeric"),
-  contains = "Bin")
+Continuous <- setRefClass("Continuous", contains = "Bin")
 
 Continuous$methods(initialize = function(...) {
   callSuper(...)
-  uniq <<- sort(unique(x))
 })
 
 Continuous$methods(collapse = function(v) {
@@ -37,9 +35,8 @@ Continuous$methods(expand = function(v) {
 
 
 Continuous$methods(fmt_numeric_cuts = function(...) {
-  l <- uniq[pmax(1, findInterval(tf@tf, uniq, all.inside = TRUE))]
-  fmt <- sprintf("(%%%1$ds - %%%1$ds]", max(nchar(l)))
-  sprintf(fmt, head(l, -1), tail(l, -1))
+  fmt <- sprintf("(%%%1$ds - %%%1$ds]", max(nchar(tf@tf))) ## get width of largest value
+  sprintf(fmt, head(tf@tf, -1), tail(tf@tf, -1))
 })
 
 
@@ -52,7 +49,7 @@ Continuous$methods(factorize = function(newdata=.self$x, transform=.self$tf, ...
 
   lbls <- fmt_numeric_cuts()
   out <- factor(newdata, exclude=NULL,
-    levels=c(lbls, names(transform@exceptions), NA))
+    levels = c(lbls, names(transform@exceptions), NA))
 
   levels(out)[is.na(levels(out))] <- "Missing"
   out[f$normal] <- cut(newdata[f$normal], transform@tf, include.lowest = T,

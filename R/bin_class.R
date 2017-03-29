@@ -1,4 +1,4 @@
-#' @include performance_class.R transform_class.R generic_methods.R
+#' @include performance_class.R transform_class.R
 
 setClassUnion("NumericOrFactor", members = c("numeric", "factor"))
 
@@ -34,7 +34,7 @@ Bin$methods(update = function(...) {
       ## find witch levels are in the overrides
       i <- intersect(names(tf@overrides), row.names(v))
       v[i, "Pred"] <- tf@overrides[i]
-      print(tf@overrides[i])
+
     }
     v
   })
@@ -46,20 +46,24 @@ Bin$methods(update = function(...) {
 })
 
 Bin$methods(bin = function(...) {
+  "Call performance bin method and pass in .self"
   perf$bin(b=.self, ...)
   args <<- modifyList(args, list(...))
   update()
 })
 
 Bin$methods(collapse = function(...) {
+  "Updated Bin after inherited collapse"
   update()
 })
 
 Bin$methods(expand = function(...) {
+  "Updated Bin after inherited expand"
   update()
 })
 
 Bin$methods(factorize = function(newdata=.self$x, transform=.self$tf, ..., n) {
+  "Return list of filters for exceptions, missing, and normal values"
   val_nas <- is.na(newdata)
   val_exc <- newdata %in% as.numeric(names(transform@exceptions))
   val_nrm <- !(val_nas | val_exc)
@@ -67,16 +71,16 @@ Bin$methods(factorize = function(newdata=.self$x, transform=.self$tf, ..., n) {
 })
 
 Bin$methods(as.matrix = function(tf=.self$tf, ...) {
+  "Matrix representation of Bin data"
   if (length(tf@repr) == 0) {
     stop("`bin` function not called yet.", call. = FALSE)
   }
 
-  out <- round(do.call(rbind, tf@repr), 3)
-
-  out
+  round(do.call(rbind, tf@repr), 3)
 })
 
 Bin$methods(show = function(...) {
+  "String representation of Bin object"
 
   m <- .self$as.matrix()
 
@@ -106,8 +110,7 @@ Bin$methods(undo = function(...) {
 
 Bin$methods(reset = function(...) {
   do.call(perf$bin, c(list(b=.self), args))
-  tf@neutralized <<- character(0)
-  tf@set_equal <<- numeric(0)
+  tf@overrides <<- numeric(0)
   update()
 })
 

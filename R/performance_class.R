@@ -1,4 +1,6 @@
-#' @include generic_methods.R bin_class.R
+#' @include bin_class.R
+
+setGeneric("bin_", def = function(.self, b, ...) callGeneric("bin_"))
 
 Performance <- setRefClass("Performance", fields = c(
   y = "numeric",

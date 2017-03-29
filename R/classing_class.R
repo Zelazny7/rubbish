@@ -5,8 +5,9 @@
 Classing <- setRefClass("Classing",
   fields = c(
     variables = "list",
+    vnames = "character",
     performance = "Performance",
-    dropped = "logical"))
+    dropped = "character"))
 
 setGeneric("create_bin", function(x, ...) callGeneric("create_bin"))
 
@@ -26,15 +27,17 @@ Classing$methods(initialize = function(data=NULL,
   performance=Performance$new(), ...) {
 
   .self$performance <<- performance
-  vnames <- setNames(names(data), names(data))
+  vnames <<- setNames(names(data), names(data))
 
   variables <<- lapply(vnames, function(nm) {
     create_bin(x = data[[nm]], perf = performance, name = nm, ...)
   })
 
   ## drop variables that aren't numeric or factors
-  variables <<- variables[lengths(variables) > 0]
-  dropped <<- setNames(logical(length(variables)), names(variables))
+  f <- !sapply(variables, is.null)
+
+  variables <<- variables[f]
+  vnames <<- vnames[f]
 })
 
 Classing$methods(bin = function(...) {
@@ -46,8 +49,9 @@ Classing$methods(bin = function(...) {
   }
 
   ## drop vars with zero information value
-  zero_value <- sapply(variables, function(b) b$sort_value())
-  dropped[zero_value == 0] <<- TRUE
+  zeros <- sapply(variables, function(b) b$sort_value()) == 0
+
+  dropped <<- names(variables)[zeros]
 
 })
 
@@ -56,21 +60,16 @@ Classing$methods(show = function() {
 })
 
 Classing$methods(get_variables = function(..., keep=FALSE) {
-
-  k <- which(!dropped[names(variables)])
-
   if (!keep) {
-    lapply(variables[k], function(x) x$x)
+    lapply(variables[setdiff(vnames, dropped)], function(x) x$x)
   } else {
     lapply(variables, function(x) x$x)
   }
 })
 
 Classing$methods(get_transforms = function(..., keep=FALSE) {
-  k <- which(!dropped[names(variables)])
-
   if (!keep) {
-    lapply(variables[k], function(x) x$tf)
+    lapply(variables[setdiff(vnames, dropped)], function(x) x$tf)
   } else {
     lapply(variables, function(x) x$tf)
   }
@@ -85,7 +84,7 @@ Classing$methods(predict = function(newdata=.self$get_variables(),
 
   ## check that all variables are found in newdata
   dnm <- names(newdata)
-  vnm <- names(which(!dropped[names(variables)]))
+  vnm <- names(transforms)
 
   if (!all(vnm %in% dnm)) {
     msg <- paste0(vnm[!vnm %in% dnm], collapse = ", ")
@@ -105,13 +104,13 @@ Classing$methods(predict = function(newdata=.self$get_variables(),
 })
 
 Classing$methods(drop = function(i, ...) {
-  stopifnot(all(i %in% names(dropped)))
-  dropped[i] <<- TRUE
+  stopifnot(all(i %in% vnames))
+  dropped <<- unique(c(dropped, i))
 })
 
 Classing$methods(undrop = function(i, ...) {
-  stopifnot(all(i %in% names(dropped)))
-  dropped[i] <<- FALSE
+  stopifnot(all(i %in% vnames))
+  dropped <<- setdiff(dropped, i)
 })
 
 Classing$methods(cluster = function(keep=FALSE, ...) {
@@ -148,7 +147,8 @@ Classing$methods(prune_clusters =  function(cc, corr=0.80, n=1) {
 
 Classing$methods(summary = function(...) {
   s <- lapply(variables, function(v) v$summary())
-  res <- do.call(rbind, s)
-  cbind(res, `Dropped`=dropped[row.names(res)])
+  res <- cbind(do.call(rbind, s), Dropped=0)
+  res[dropped, "Dropped"] <- 1
+  res
 })
 

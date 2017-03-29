@@ -8,7 +8,7 @@ Scorecard <- setRefClass("Scorecard",
    seed = "numeric",
    models = "list",
    selected_model = "character",
-   inmodel = "logical"),
+   inmodel = "character"),
  contains = "Classing")
 
 Scorecard$methods(initialize = function(..., seed=as.numeric(strftime(Sys.time(), format="%H%M%S"))) {
@@ -65,7 +65,7 @@ Scorecard$methods(fit = function(name, description="", newdata=.self$get_variabl
     if (ans == "No") break
   }
 
-  v <- names(which(!dropped))
+  v <- setdiff(vnames, dropped)
   x <- predict(newdata=newdata[v], type="woe")
 
   set.seed(seed)
@@ -78,8 +78,7 @@ Scorecard$methods(fit = function(name, description="", newdata=.self$get_variabl
   coefs <- coefs[which(coefs != 0)]
 
   ## set the inmodel vector
-  inmodel <<- setNames(logical(length(variables)), names(variables))
-  inmodel[names(coefs)[-1]] <<- TRUE
+  inmodel <<- names(coefs)[-1]
 
   ## performance metrics
   contr <- contributions_(x[,names(coefs)[-1]], coefs, y, w)
@@ -103,9 +102,12 @@ Scorecard$methods(show = function(...) {
               sapply(models, slot, "description")), sep="\n")
 })
 
-Scorecard$methods(predict = function(newdata=.self$get_variables(), type="score", ...) {
+Scorecard$methods(predict = function(newdata=NULL, keep=FALSE, type="score", ...) {
 
-  woe <- callSuper(newdata=newdata, transforms=.self$get_transforms(), ...)
+  if (is.null(newdata)) newdata <- get_variables(keep=keep)
+  transforms <- get_transforms(keep=keep)
+
+  woe <- callSuper(newdata=newdata, transforms=transforms, ...)
 
   if (type == "woe") {
     return(woe)
@@ -115,7 +117,6 @@ Scorecard$methods(predict = function(newdata=.self$get_variables(), type="score"
   v <- names(mod@coefs[-1])
 
   woe[,v] %*% mod@coefs[v] + mod@coefs[1]
-  # glmnet::predict.cv.glmnet(object=mod@fit, newx=woe, type="link")
 })
 
 ## show summary for selected model
@@ -128,8 +129,12 @@ Scorecard$methods(summary = function(...) {
   res <- callSuper(tfs = get_transforms(keep=TRUE))
   vars <- row.names(res)
 
-  cbind(res, `In Model` = inmodel[vars], `Coefs` = mod@coefs[vars],
+
+  out <- cbind(res, `In Model` = 0, `Coefs` = mod@coefs[vars],
     `Contribution` = mod@contribution[vars])
+
+  out[inmodel,"In Model"] <- 1
+  out
 })
 
 Scorecard$methods(adjust = function(...) {
@@ -138,9 +143,15 @@ Scorecard$methods(adjust = function(...) {
 
 Scorecard$methods(sort = function(...) {
 
-  v <- sapply(variables, function(x) x$sort_value())
-  i <- order(inmodel[names(variables)], -dropped[names(variables)], v,
-    decreasing = TRUE, na.last = TRUE)
+  v <- setNames(sapply(variables, function(x) x$sort_value()), names(variables))
+
+  im <- setNames(rep(0, length(v)), names(v))
+  dr <- setNames(rep(0, length(v)), names(v))
+
+  im[inmodel] <- 1
+  dr[dropped] <- 1
+
+  i <- order(im, v, -dr, decreasing = TRUE, na.last = TRUE)
 
   variables <<- variables[i]
 

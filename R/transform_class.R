@@ -1,5 +1,3 @@
-#' @include generic_methods.R
-
 setClass("Transform", slots = c(
     tf = "ANY",
     subst = "numeric",
@@ -12,6 +10,8 @@ setClass("Transform", slots = c(
 
 neutralize_ <- function(tf, i) {
   x <- c(names(tf@subst), tf@exceptions, names(tf@nas))
+  if (!(all(i) %in% seq_along(x))) return(tf)
+
   new_tf <- tf
 
   ## ones that are already neutralized are UN-neutralized
@@ -28,6 +28,8 @@ neutralize_ <- function(tf, i) {
 set_equal_ <- function(tf, v1, v2) {
 
   x <- c(tf@subst, tf@exceptions, tf@nas)
+  if (!(all(c(v1, v2)) %in% seq_along(x))) return(tf)
+
   new_tf <- tf
 
   overrides <- setNames(x[v2], names(x)[v1])

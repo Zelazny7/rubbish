@@ -14,8 +14,7 @@ Imports:
     Matrix,
     glmnet
 LinkingTo: Rcpp
-Collate:
-    'generic_methods.R'
+Collate: 
     'transform_class.R'
     'performance_class.R'
     'bin_class.R'

@@ -14,13 +14,3 @@ bin <- function(data, y, w=rep(1, length(y)), min.iv=0.001, min.cnt=25,
 
   return(sc)
 }
-
-#' @export
-adjust <- function(x, ...) {
-  x$adjust(...)
-}
-
-#' @export
-fit <- function(x, name, ...) {
-  x$fit(name=name, ...)
-}

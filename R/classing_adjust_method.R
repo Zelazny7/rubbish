@@ -4,11 +4,13 @@ Classing$methods(adjust = function(...) {
   i <- 1
 
   while(i <= length(variables)) {
+    nm <- variables[[i]]$name
+
     cat("\014")
     variables[[i]]$show()
 
     cat(sprintf("\n [In Model: %5s | Dropped: %5s]",
-      inmodel[i], dropped[i]), sep = "\n")
+      nm %in% inmodel, nm %in% dropped), sep = "\n")
 
     variables[[i]]$plot()
     cat ("\nEnter command (Q to quit):")
@@ -72,10 +74,10 @@ Classing$methods(adjust = function(...) {
     } else if (command == "d") {
 
       ## get current status
-      if (dropped[names(variables)[i]]) {
-        undrop(names(variables)[i])
+      if (nm %in% dropped) {
+        undrop(nm)
       } else {
-        drop(names(variables)[i])
+        drop(nm)
       }
 
     } else if (command == "m") {
