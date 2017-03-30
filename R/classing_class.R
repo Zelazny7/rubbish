@@ -103,14 +103,22 @@ Classing$methods(predict = function(newdata=.self$get_variables(),
 
 })
 
-Classing$methods(drop = function(i, ...) {
-  stopifnot(all(i %in% vnames))
-  dropped <<- unique(c(dropped, i))
+Classing$methods(drop = function(vars=character(0), all=FALSE, ...) {
+  if (all) {
+    dropped <<- vnames
+  } else {
+    stopifnot(all(vars %in% vnames))
+    dropped <<- unique(c(dropped, vars))
+  }
 })
 
-Classing$methods(undrop = function(i, ...) {
-  stopifnot(all(i %in% vnames))
-  dropped <<- setdiff(dropped, i)
+Classing$methods(undrop = function(vars=character(0), all=FALSE, ...) {
+  if (all) {
+    dropped <<- character(0)
+  } else {
+    stopifnot(all(vars %in% vnames))
+    dropped <<- setdiff(dropped, vars)
+  }
 })
 
 Classing$methods(cluster = function(keep=FALSE, ...) {

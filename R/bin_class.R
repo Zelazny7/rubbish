@@ -97,6 +97,7 @@ Bin$methods(show = function(...) {
 
 
 Bin$methods(undo = function(...) {
+  "Undo the last operation that updated the history list. Pops the "
   if (length(history) > 1) {
     tf <<- history[[length(history) - 1]]
     history <<- head(history, -1)
