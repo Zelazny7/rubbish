@@ -75,28 +75,30 @@ Classing$methods(get_transforms = function(..., keep=FALSE) {
   }
 })
 
-Classing$methods(predict = function(newdata=.self$get_variables(),
-  transforms=.self$get_transforms(), ...) {
+Classing$methods(predict = function(newdata=NULL, keep=keep) {
   on.exit(cat(sep = "\n"))
+
+  if (is.null(newdata)) newdata <- get_variables(keep=keep)
+  vnm <- if (keep) vnames else setdiff(vnames, dropped)
 
   ## check that data has var names
   stopifnot(!is.null(names(newdata)))
 
-  ## check that all variables are found in newdata
   dnm <- names(newdata)
-  vnm <- names(transforms)
 
+  ## check that all variables are found in newdata
   if (!all(vnm %in% dnm)) {
     msg <- paste0(vnm[!vnm %in% dnm], collapse = ", ")
     stop(sprintf("Vars not found in data: %s", msg), call. = F)
   }
 
   ## put the newdata in the same order as the variables
-  woe <- mapply(function(idx, b, v, tf) {
-    progress_(idx, length(vnm), "Predicting", b$name)
-    b$predict(newdata=v, transform=tf)
-  },
-    seq_along(vnm), variables[vnm], newdata[vnm], transforms[vnm])
+  func <- function(i, b, v) {
+    progress_(i, length(vnm), "Predicting", b$name)
+    b$predict(newdata=v)
+  }
+
+  woe <- mapply(func, seq_along(vnm), variables[vnm], newdata[vnm])
 
   colnames(woe) <- vnm
   woe

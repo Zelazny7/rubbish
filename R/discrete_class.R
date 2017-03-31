@@ -1,4 +1,11 @@
+#' @include bin_class.R
 
+#' Discrete class
+#'
+#' Discrete object generator class used to wrap binned factor variables.
+#'
+#' @export Discrete
+#' @exportClass Discrete
 Discrete <- setRefClass("Discrete", contains = "Bin")
 
 Discrete$methods(initialize = function(x, ...) {
@@ -6,35 +13,94 @@ Discrete$methods(initialize = function(x, ...) {
   callSuper(x=x, ...)
 })
 
-Discrete$methods(collapse = function(v) {
-  f <- which(tf@tf %in% unique(tf@tf)[v]) ## which values were selected for collapse?
+
+#' Collapse levels of a Discrete bin object
+#'
+#' @name Discrete_collapse
+#' @param i numeric vector of bin levels to collapse. Do not have to be
+#' adjacent.
+#' @return modifies the transform object in place.
+NULL
+Discrete$methods(collapse = function(i) {
+  f <- which(tf@tf %in% unique(tf@tf)[i]) ## which values were selected for collapse?
   tf@tf[f] <<- paste(names(tf@tf)[f], collapse=',') # collapse them with commas
   callSuper()
 })
 
-Discrete$methods(expand = function(v) {
-  f <- tf@tf %in% unique(tf@tf)[v]
+
+#' Expand a level of a Discrete bin into multiple new levels
+#'
+#' @name Discrete_expand
+#' @param i numeric vector of length 1 indiicating bin level to expand.
+#' @details All of the collapsed levels will be expanded.
+#' @return modifies the transform object in place.
+NULL
+Discrete$methods(expand = function(i) {
+  f <- tf@tf %in% unique(tf@tf)[i]
   tf@tf[f] <<- levels(x)[f]
   callSuper()
 })
 
-Discrete$methods(factorize = function(newdata=.self$x, transform=.self$tf, ...) {
-  f <- callSuper(newdata, ...)
+
+#' Preprocess transform object for summarization
+#'
+#' @name Discrete_factorize
+#' @param newdata Factor vector on which to apply the transformation. Defaults
+#' to the \code{x} field of the Discrete object
+#' @details \code{factorize} returns a list with two fields:
+#' \itemize{
+#'  \item{factor }{ Factor with the bin labels applied to \code{x}}
+#'  \item{types }{ list of logical vectors for missing, exception, and normal}
+#' }
+#' @return \code{list} with two fields. See details.
+NULL
+Discrete$methods(factorize = function(newdata=.self$x) {
+  f <- callSuper(newdata)
 
   out <- newdata
-  levels(out) <- unlist(transform@tf)[levels(out)]
+  levels(out) <- unlist(tf@tf)[levels(out)]
   out <- addNA(out)
   levels(out)[is.na(levels(out))] <- "Missing"
 
   list(factor=out, types=f)
 })
 
-Discrete$methods(predict = function(newdata=.self$x, transform=.self$tf, ...) {
+
+#' Substitute summarized performance values for numeric inputs
+#'
+#' @name Discrete_predict
+#' @param newdata Factor vector to apply performance substition. Defaults to
+#' data used to create the Discrete object.
+#' @return numeric variable with bin performance values substituted for
+#' the inputs.
+NULL
+Discrete$methods(predict = function(newdata=.self$x) {
   stopifnot(is.factor(newdata))
-  callSuper(newdata=newdata, transform=transform, ...)
+  callSuper(newdata=newdata)
 })
 
 
+#' Generate SAS code for Discrete object
+#'
+#' @name Discrete_gen_code_sas
+#'
+#' @description generate SAS code representing the transformation from input
+#' numeric values to the substituted performance values. Also generates code
+#' calculating difference from min/max/neutral and adverse action code
+#' assignments.
+#' @param pfx character prefix to prepend to variable names
+#' @param coef numeric coefficient to multiply performance values by. Passed in
+#' by the Scorecard model object. Defaults to 1.
+#' @param method method used for calculating the reference level for adverse
+#' action codes. Three possible choices:
+#' \itemize{
+#'  \item{"min" }{Calculate difference from minimum of perf values - default}
+#'  \item{"max" }{Calculate difference from maximum of perf values}
+#'  \item{"neutral" }{Calculate difference from zero}#'
+#'  }
+#' @param i numeric value enumerating the variables. Passed in from other code.
+#' @return a character vector of SAS code
+NULL
 Discrete$methods(gen_code_sas = function(pfx="", coef=1, method="min", i=1, ...) {
 
   val <- gsub(",", "','", names(tf@subst))
@@ -59,8 +125,3 @@ Discrete$methods(gen_code_sas = function(pfx="", coef=1, method="min", i=1, ...)
     ## AA Dist
     sprintf("\n%s_AA_dist_%02d = %s - %s_V%02d_w;", pfx, i, ref, pfx, i))
 })
-
-
-
-
-

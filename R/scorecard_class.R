@@ -104,14 +104,12 @@ Scorecard$methods(show = function(...) {
 
 Scorecard$methods(predict = function(newdata=NULL, keep=FALSE, type="score", ...) {
 
-  if (is.null(newdata)) newdata <- get_variables(keep=keep)
-  transforms <- get_transforms(keep=keep)
+  # if (is.null(newdata)) newdata <- get_variables(keep=keep)
+  # transforms <- get_transforms(keep=keep)
 
-  woe <- callSuper(newdata=newdata, transforms=transforms, ...)
+  woe <- callSuper(newdata=newdata, keep=keep)
 
-  if (type == "woe") {
-    return(woe)
-  }
+  if (type == "woe") return(woe)
 
   mod <- models[[selected_model]]
   v <- names(mod@coefs[-1])
@@ -254,3 +252,15 @@ Scorecard$methods(gen_code_sas = function(pfx="", method="min", ...) {
   unlist(out)
 
 })
+
+
+Scorecard$methods(get_dropped = function(invert=FALSE) {
+  if (invert) setdiff(vnames, dropped) else dropped
+})
+
+Scorecard$methods(get_inmodel = function(invert=FALSE) {
+  if (invert) setdiff(vnames, inmodel) else inmodel
+})
+
+
+
