@@ -1,16 +1,14 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-    ## Loading required package: rubbish
-
-What is `rubbish`?
-==================
+What is Rubbish?
+================
 
 `rubbish` is an R package that helps modelers build scorecards. Scorecard models need to be more than predictive. Regulatory oversight often necessitates they be transparent as well. Model transparency is difficult to enforce in more predictive, non-linear methods such as neural networks, random forest, or gradient boosted decision trees. Often direct modeler intervention is required to ensure proper treatment is given for values of independent variables.
 
 `rubbish` attempts to solve these problems by providing interactive variable manipulation facilities giving the modeler total control over how variables are treated in scorecard models.
 
-Installing `rubbish`
---------------------
+Installing rubbish
+------------------
 
 The easiest way to install `rubbish` is by using the `devtools` package:
 
@@ -19,8 +17,8 @@ if (!require(devtools)) install.packages("devtools")
 devtools::install_github(repo="Zelazny7/rubbish")
 ```
 
-Overview of `rubbish`
----------------------
+Overview of rubbish
+-------------------
 
 `rubbish` is comprised of three main modeling steps: Bin, Fit, & Adjust. Each of these steps are outlined in the following sections.
 
@@ -54,4 +52,4 @@ Performance substitution is used to put all predictors on the same scale and for
 mod$fit("model 1", "initial model with all variables")
 ```
 
-The model method belonds
+To be continued...
