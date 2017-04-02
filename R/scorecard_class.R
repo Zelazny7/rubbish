@@ -45,8 +45,8 @@ Scorecard$methods(add_model = function(mod, ...) {
 
 Scorecard$methods(bin = function(...) {
   callSuper(...)
-  HEAD <- new("Model", name="HEAD", description="", fit=NULL, dropped=dropped,
-              transforms=get_transforms())
+  HEAD <- new("Model", name="scratch", description="", fit=NULL, ks=0,
+              dropped=dropped, transforms=get_transforms())
   add_model(HEAD)
 })
 
@@ -98,14 +98,13 @@ Scorecard$methods(show = function(...) {
   cat(sprintf("%d models", length(models)), sep="\n")
   i <- rep("", length(models))
   i[names(models) == selected_model] <- "*"
-  cat(sprintf(" |-- %s %-2s  > %s", sapply(models, slot, "name"), i,
+  cat(sprintf(" |-- %-2s %-20s | %04.1f ks | %s", i,
+              sapply(models, slot, "name"),
+              sapply(models, slot, "ks") * 100,
               sapply(models, slot, "description")), sep="\n")
 })
 
 Scorecard$methods(predict = function(newdata=NULL, keep=FALSE, type="score", ...) {
-
-  # if (is.null(newdata)) newdata <- get_variables(keep=keep)
-  # transforms <- get_transforms(keep=keep)
 
   woe <- callSuper(newdata=newdata, keep=keep)
 
