@@ -74,6 +74,19 @@ mod <- bin(data=titanic[,-1], y=titanic$Survived)
 mod
 ```
 
+Bin variables can be accessed directly. Though as we'll see later, this is not
+recommended. But for illustration purposes, the following output is the kind of
+information a bin object typically stores:
+
+```{r, echo=TRUE, prompt=TRUE}
+mod$variables$Pclass
+```
+
+Additionally, bin objects can be plotted by calling their `plot` method. 
+
+```{r, echo=TRUE, prompt=TRUE,fig.height=5, fig.width=7, fig.align='center'}
+mod$variables$Pclass$plot()
+```
 
 ### Fit
 
@@ -90,10 +103,51 @@ continuous dataset.
 Performance substitution is used to put all predictors on the same scale and 
 force a linear relationship between each predictor and the response variables.
 
-```{r, echo=TRUE, eval=FALSE}
+```{r, echo=TRUE, eval=TRUE, results='hide', collapse=TRUE}
 mod$fit("model 1", "initial model with all variables")
 ```
+```{r, echo=TRUE, prompt=TRUE, collapse=TRUE}
+mod
+```
 
-To be continued...
+Once a model is fit, it can be predicted as well. This returns a score value
+appropriate for the type of model that was fit to the response variable. In the
+case of binary performance, a binomial response was selected resulting in a 
+logit.
+
+```{r, echo=TRUE, eval=FALSE}
+pred <- mod$predict()
+```
+```{r, echo=FALSE, eval=TRUE, results='hide'}
+pred <- mod$predict()
+```
+```{r, echo=TRUE, prompt=TRUE}
+head(pred)
+```
+
+### Adjust
+
+The most important functionality provided by `rubbish` is the manipulation of 
+bin objects.
+
+Bins can be collapsed:
+
+```{r, echo=TRUE, eval=TRUE}
+mod$variables$Pclass$collapse(c(1,3))
+mod$variables$Pclass$show()
+
+# Alternate syntax
+# mod$variables$Pclass - c(1,3)
+```
+
+Bins can be expanded:
+
+```{r, echo=TRUE, eval=TRUE}
+mod$variables$Pclass$expand(1)
+mod$variables$Pclass$show()
+
+# Alternate syntax
+# mod$variables$Pclass + 1
+```
 
 

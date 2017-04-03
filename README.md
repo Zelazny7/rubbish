@@ -40,6 +40,26 @@ Calling the `bin` function returns a Scorecard object. The Scorecard object cont
 #>  |-- *  scratch              | 00.0 ks |
 ```
 
+Bin variables can be accessed directly. Though as we'll see later, this is not recommended. But for illustration purposes, the following output is the kind of information a bin object typically stores:
+
+``` r
+> mod$variables$Pclass
+#> Pclass
+#>           N  #1  #0    %N    %1    %0  P(1)    WoE    IV   Pred
+#> [01]  1 216 136  80 0.242 0.398 0.146 0.630  1.004 0.253  1.004
+#> [02]  2 184  87  97 0.207 0.254 0.177 0.473  0.364 0.028  0.364
+#> [03]  3 491 119 372 0.551 0.348 0.678 0.242 -0.666 0.220 -0.666
+#>         891 342 549 1.000 1.000 1.000 0.000  0.000 0.501  0.000
+```
+
+Additionally, bin objects can be plotted by calling their `plot` method.
+
+``` r
+> mod$variables$Pclass$plot()
+```
+
+<img src="README-unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
+
 ### Fit
 
 The second step of scorecard developement using `rubbish` is fitting a model. `rubbish` uses the `glmnet` package under the hood to fit a regularized regression model. The discretized variables have their observed performance values substituted for their actual input values to create a completely continuous dataset.
@@ -52,4 +72,61 @@ Performance substitution is used to put all predictors on the same scale and for
 mod$fit("model 1", "initial model with all variables")
 ```
 
-To be continued...
+``` r
+> mod
+#> 2 models
+#>  |--    scratch              | 00.0 ks | 
+#>  |-- *  model 1              | 61.6 ks | initial model with all variables
+```
+
+Once a model is fit, it can be predicted as well. This returns a score value appropriate for the type of model that was fit to the response variable. In the case of binary performance, a binomial response was selected resulting in a logit.
+
+``` r
+pred <- mod$predict()
+```
+
+``` r
+> head(pred)
+#>             [,1]
+#> [1,] -2.17341549
+#> [2,]  2.79122810
+#> [3,] -0.08208419
+#> [4,]  2.65690341
+#> [5,] -2.06933532
+#> [6,] -2.73979852
+```
+
+### Adjust
+
+The most important functionality provided by `rubbish` is the manipulation of bin objects.
+
+Bins can be collapsed:
+
+``` r
+mod$variables$Pclass$collapse(c(1,3))
+mod$variables$Pclass$show()
+#> Pclass
+#>             N  #1  #0    %N    %1    %0  P(1)    WoE    IV   Pred
+#> [01]  1,3 707 255 452 0.793 0.746 0.823 0.361 -0.099 0.008 -0.099
+#> [02]  2   184  87  97 0.207 0.254 0.177 0.473  0.364 0.028  0.364
+#>           891 342 549 1.000 1.000 1.000 0.000  0.000 0.036  0.000
+
+# Alternate syntax
+# mod$variables$Pclass - c(1,3)
+```
+
+Bins can be expanded:
+
+``` r
+mod$variables$Pclass$expand(1)
+mod$variables$Pclass$show()
+#> Pclass
+#>           N  #1  #0    %N    %1    %0  P(1)    WoE    IV   Pred
+#> [01]  1 216 136  80 0.242 0.398 0.146 0.630  1.004 0.253  1.004
+#> [02]  2 184  87  97 0.207 0.254 0.177 0.473  0.364 0.028  0.364
+#> [03]  3 491 119 372 0.551 0.348 0.678 0.242 -0.666 0.220 -0.666
+#>         891 342 549 1.000 1.000 1.000 0.000  0.000 0.501  0.000
+
+# Alternate syntax
+# mod$variables$Pclass + 1
+```
