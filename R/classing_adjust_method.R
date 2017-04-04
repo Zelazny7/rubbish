@@ -19,7 +19,7 @@ Classing$methods(adjust = function(...) {
       break
     }  else if (command %in% c("h", "help")) {
       cat(
-        "binnr interactive commands:
+        "rubbish interactive commands:
         (Q)uit
         (n)ext
         (p)revious
@@ -30,7 +30,6 @@ Classing$methods(adjust = function(...) {
         (u)ndo
         (r)eset
         (d)rop / undrop
-        binnr bin operations
         != <#> : Neutralize level
         +  <#> : Expand level
         -  <#> : Collapse level(s)

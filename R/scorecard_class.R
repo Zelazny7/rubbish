@@ -148,7 +148,7 @@ Scorecard$methods(sort = function(...) {
   im[inmodel] <- 1
   dr[dropped] <- 1
 
-  i <- order(im, v, -dr, decreasing = TRUE, na.last = TRUE)
+  i <- order(im, -dr, v, decreasing = TRUE, na.last = TRUE)
 
   variables <<- variables[i]
 
