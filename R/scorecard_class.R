@@ -1,6 +1,16 @@
 #' @include classing_class.R
 #' @include classing_adjust_method.R
 
+#' @name Scorecard_Class
+#' @rdname Scorecard_Class
+#' @description Scorecard class that wraps a data.frame and prepares it for
+#' scorecard modeling.
+#' @field seed saved random seed that is based on  \code{\link{Sys.time}}.
+#' @field models list of fitted models for this Scorecard
+#' @field selected_model name of last  selected that was loaded into the
+#' transforms
+#' @field inmodel character vector of variable names that are in the selected
+#' model
 #' @export Scorecard
 #' @exportClass Scorecard
 Scorecard <- setRefClass("Scorecard",
@@ -16,16 +26,26 @@ Scorecard$methods(initialize = function(..., seed=as.numeric(strftime(Sys.time()
   callSuper(...)
 })
 
+
 Scorecard$methods(has_model = function(model) {
   if (!model %in% names(models)) {
     stop("Requested model not found: ", model, call. = FALSE)
   }
 })
 
-Scorecard$methods(select = function(model, ...) {
-  "select a model and load the transforms associated with it"
 
-  has_model(model)
+#' Select a fitted model and load the Transforms
+#'
+#' @name Scorecard_select
+#' @rdname Scorecard_Class
+#' @description Select searches the model fitting history for the requested
+#' model. It then loads the associated transforms for the model variables into
+#' the current Scorevard object. Additionally it loads the dropped and inmodel
+#' vectors at the time of the fit.
+NULL
+Scorecard$methods(select = function(model, ...) {
+
+  has_model(model) ## check that model exists
   mod <- models[[model]]
   selected_model <<- model
 

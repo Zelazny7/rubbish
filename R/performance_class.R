@@ -1,13 +1,53 @@
 #' @include bin_class.R
 
+setClassUnion("NumericOrFactor", members = c("numeric", "factor"))
+
 setGeneric("bin_", def = function(.self, b, ...) callGeneric("bin_"))
 
+#' @name Performance_Class
+#' @rdname Performance_Class
+#' @description Bin object generator class used to wrap binned variables.
+#' @field y numeric or factor response variable
+#' @field w numeric weight variable
+#' @export Performance
+#' @exportClass Performance
 Performance <- setRefClass("Performance", fields = c(
-  y = "numeric",
+  y = "NumericOrFactor",
   w = "numeric"))
 
 Performance$methods(initialize = function(y=numeric(0), ..., w=rep(1, length(y))) {
+
+  if (any(is.na(y))) {
+    stop("y cannot have missing values", call. = FALSE)
+  }
+
+  if (length(y) != length(w)) {
+    stop("y and w must be the same length", call. = FALSE)
+  }
+
   callSuper(y=y, w=w, ...)
-  stopifnot(!any(is.na(y)))
-  stopifnot(length(y) == length(w))
+})
+
+Performance$methods(bin = function(...) {
+  stop("Must implement")
+})
+
+Performance$methods(summarize = function(...) {
+  stop("Must implement")
+})
+
+Performance$methods(update = function(...) {
+  stop("Must implement")
+})
+
+Performance$methods(plot = function(...) {
+  stop("Must implement")
+})
+
+Performance$methods(summary = function(...) {
+  stop("Must implement")
+})
+
+Performance$methods(sort_value = function(...) {
+  stop("Must implement")
 })

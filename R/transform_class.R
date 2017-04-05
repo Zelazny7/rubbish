@@ -1,3 +1,15 @@
+#' @name Transform_Class
+#' @rdname Transform_Class
+#' @description Transform object class definition. The Transform object controls
+#' how an independent variable is binned and manages missing values, exceptions,
+#' overrides, and weight-of-evidence substitution.
+#' @slot tf the mapping of input values to bin levels
+#' @slot subst the WoE substitution for the mapped values
+#' @slot exceptions numeric vector of exception values
+#' @slot nas WoE value for missing value sof \code{x}
+#' @slot overrides named vector of bin levels to overriden substituion values
+#' @slot repr cached, tabular representation of the bin object for quick display
+#' @exportClass Transform
 setClass("Transform", slots = c(
     tf = "ANY",
     subst = "numeric",
@@ -8,6 +20,13 @@ setClass("Transform", slots = c(
   prototype = list(nas = c(Missing=0))
 )
 
+
+#' Neutralize selected levels of Transform setting substitution to zero
+#' @name neutralize
+#' @rdname Transform_Class
+#' @param tf Transform object
+#' @param i numeric vector of levels to neutralize
+#' @return new Transform object with updated overrides
 neutralize_ <- function(tf, i) {
   x <- c(names(tf@subst), tf@exceptions, names(tf@nas))
   if (!(all(i) %in% seq_along(x))) return(tf)
@@ -25,6 +44,14 @@ neutralize_ <- function(tf, i) {
   new_tf
 }
 
+
+#' Set substitution of one level equal to substitution of another
+#' @name set_equal
+#' @rdname Transform_Class
+#' @param tf Transform object
+#' @param v1 level to override
+#' @param v2 value with which to override v1's substitution
+#' @return new Transform object with updated overrides
 set_equal_ <- function(tf, v1, v2) {
 
   x <- c(tf@subst, tf@exceptions, tf@nas)
@@ -40,6 +67,13 @@ set_equal_ <- function(tf, v1, v2) {
 
 }
 
+
+#' Update Transform object with new information after Bin operations
+#' @name update_transform
+#' @rdname Transform_Class
+#' @param tf Transform object
+#' @param result list of summarized performane values for the updated Bin object
+#' @return new Transform object with updated subst, nas, exceptions, and repr
 update_transform <- function(tf, result) {
 
   tf@subst <- setNames(result$normal[,"Pred"], row.names(result$normal))

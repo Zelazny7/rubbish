@@ -90,6 +90,7 @@ Classing$methods(adjust = function(...) {
       cat("Enter Exceptions:")
       v <- readLines(n = 1)
       e <- eval(parse(text=v))
+
       if (is.numeric(e) | is.null(e)) {
         variables[[i]]$exceptions(e)
       }
@@ -118,6 +119,12 @@ Classing$methods(adjust = function(...) {
     } else if (command == "r") {
 
       variables[[i]]$reset()
+
+    } else if (command == "c") {
+
+      cat("Enter cut-points separated by spaces:")
+      n <- as.numeric(strsplit(readline(), "\\s+")[[1]])
+      variables[[i]]$set_cutpoints(n)
 
     } else {
       tryCatch({

@@ -17,6 +17,7 @@ Continuous$methods(initialize = function(...) {
 #' Collapse adjacent levels of a Continuous bin object
 #'
 #' @name Continuous_collapse
+#' @rdname Continuous_Class
 #' @param i numeric vector of bin levels to collapse. Must be adjacent.
 #' @return modifies the transform object in place.
 NULL
@@ -31,6 +32,7 @@ Continuous$methods(collapse = function(i) {
 #' Expand a level of a Continuous bin into multiple new levels
 #'
 #' @name Continuous_expand
+#' @rdname Continuous_Class
 #' @param i numeric vector of length 1 indiicating bin level to expand.
 #' @details The requested level is divided into quintiles if possible. Duplicate
 #' levels are removed.
@@ -58,6 +60,7 @@ Continuous$methods(expand = function(i) {
 #' Helper function to format Continuous bin labels
 #'
 #' @name Continuous_fmt_numeric_cuts
+#' @rdname Continuous_Class
 #' @return character vector of bin labels
 NULL
 Continuous$methods(fmt_numeric_cuts = function() {
@@ -69,6 +72,7 @@ Continuous$methods(fmt_numeric_cuts = function() {
 #' Preprocess transform object for summarization
 #'
 #' @name Continuous_factorize
+#' @rdname Continuous_Class
 #' @param newdata Numeric vector on which to apply the transformation. Defaults
 #' to the \code{x} field of the Continuous object
 #' @details \code{factorize} returns a list with two fields:
@@ -97,6 +101,7 @@ Continuous$methods(factorize = function(newdata=.self$x) {
 #' Substitute summarized performance values for numeric inputs
 #'
 #' @name Continuous_predict
+#' @rdname Continuous_Class
 #' @param newdata numeric vector to apply performance substition. Defaults to
 #' data used to create the Continuous object.
 #' @return numeric variable with bin performance values substituted for
@@ -111,7 +116,7 @@ Continuous$methods(predict = function(newdata=.self$x) {
 #' Generate SAS code for Continuous object
 #'
 #' @name Continuous_gen_code_sas
-#'
+#' @rdname Continuous_Class
 #' @description generate SAS code representing the transformation from input
 #' numeric values to the substituted performance values. Also generates code
 #' calculating difference from min/max/neutral and adverse action code
@@ -159,4 +164,56 @@ Continuous$methods(gen_code_sas = function(pfx="", coef=1, method="min", i=1, ..
 
     ## Distance Calculations
     sprintf("\n%s_AA_dist_%02d = %s - %s_V%02d_w;", pfx, i, ref, pfx, i))
+})
+
+
+#' Set monotoncity of performance
+#'
+#' @name Continuous_mono
+#' @rdname Continuous_Class
+#' @param m the monotonic relationship to enforce.
+#' @description \code{mono} calls the \code{bin} function with the requested
+#' monotoncity. The variable is discretized while enforcing the monotonicity.
+#' The possible values are:
+#' \itemize{
+#'  \item{0 }{ No monotoncity enforced - the default.}
+#'  \item{1 }{ Increasing monotoncically with the \code{y}}
+#'  \item{-1 } {Decreasing monotoncically with the \code{y}}
+#'  \item{2 }{ Either increasing or decreasing montonically with the \code{y}}
+#' }
+NULL
+Continuous$methods(mono = function(m) {
+  args$mono <<- m
+  do.call(perf$bin, c(list(b=.self), args))
+  update()
+})
+
+
+#' Set the exception values of the Bin object
+#'
+#' @name Continuous_exceptions
+#' @rdname Continuous_Class
+#' @param e numeric vector of exception values to withhold from binning
+NULL
+Continuous$methods(exceptions = function(e) {
+  stopifnot(is(e, "numeric"))
+  args$exceptions <<- e
+  tf@exceptions <<- setNames(rep(0, length(e)), e)
+  update()
+})
+
+
+#' Explicity set bin boundaries
+#'
+#' @name Continuous_set_cutpoints
+#' @rdname Continuous_Class
+#' @param cuts space-separated list of numeric cutpoints
+#' @description \code{set_equal} sets the performance summary value of \code{i1}
+#' equal to that of \code{i2}. This can be used to force two bins to have the
+#' same substituted value.
+NULL
+Continuous$methods(set_cutpoints = function(cuts) {
+  cuts <- sort(unique(c(-Inf, cuts, Inf)))
+  tf@tf <<- cuts
+  update()
 })
