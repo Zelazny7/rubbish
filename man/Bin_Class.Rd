@@ -2,113 +2,11 @@
 % Please edit documentation in R/bin_class.R
 \docType{class}
 \name{Bin_Class}
-\alias{Bin_Class}
 \alias{Bin}
-\alias{Bin_update}
-\alias{Bin_bin}
-\alias{Bin_collapse}
-\alias{Bin_expand}
-\alias{Bin_factorize}
-\alias{Bin_as.matrix}
-\alias{Bin_show}
-\alias{Bin_undo}
-\alias{Bin_reset}
-\alias{Bin_set_equal}
-\alias{Bin_neutralize}
-\alias{Bin_plot}
-\alias{Bin_predict}
-\alias{Bin_sort_value}
-\alias{Bin_summary}
-\title{Update the Bin object after performing requested operations}
-\arguments{
-\item{...}{arguments passed on to the Performance object's \code{bin}
-implementation. This varies depending on the performance type.}
-
-\item{i}{numeric vector of bin levels to collapse.}
-
-\item{i}{numeric vector of length 1 indiicating bin level to expand.}
-
-\item{newdata}{vector on which to apply the transformation. Defaults to the
-\code{x} field of the Bin object}
-
-\item{...}{optional arguments passed on to the \link{\code{print}} function.}
-
-\item{i1}{index of target bin}
-
-\item{i2}{index of source bin}
-
-\item{i}{numeric vector of bin indices to neutralize.}
-
-\item{newdata}{vector of the same type as \code{x} for which to substitute
-the bin weight-of-evidence values.}
-}
-\value{
-\code{bin} creates a Transform object and adds it to the Bin object.
-
-modifies the transform object in place.
-
-modifies the transform object in place.
-
-\code{list} with three fields. See details.
-
-\code{matrix} of summarized bin data
-}
+\alias{Bin_Class}
+\title{Bin reference class generator}
 \description{
 Bin object generator class used to wrap binned variables.
-
-The update method is called any time the user makes changes to
-the Bin object. The transform object is changed and the history list is
-updated.
-
-The bin function is the entry point for discretizing and
-summarizing variables by some arbitray performance metric. Each Performance
-object must implement a bin method for numeric and factor variables.
-Currently only binary performance is supported.
-
-Collapse levels of a Bin object
-
-Expand a level of a Bin into multiple new levels
-
-Preprocess transform object for summarization
-
-Return matrix summarizing Bin object
-
-Print representation of Bin object
-
-Undo the last operation
-
-\code{reset} re-bins the object using the \code{args} that were
-saved during the first call to \code{bin}.
-
-\code{set_equal} sets the performance summary value of \code{i1}
-equal to that of \code{i2}. This can be used to force two bins to have the
-same substituted value.
-
-\code{neutralize} sets the performance substitution value of
-the requested indices to zero. This has the effect of neither adding nor
-subtracting points in the final score.
-
-Plot the Bin object
-
-Substitute weight-of-evidence for the input \code{x} values
-
-Access and return the sort value for the performance object
-
-Return summary information for Bin based on associated performance object
-}
-\details{
-All of the collapsed levels will be expanded.
-
-\code{factorize} returns a list with three fields:
-\itemize{
- \item{normal }{ logical vector indicating non-missing, non-exceptoin values}
- \item{exception }{ logical vector indicating exception values}
- \item{missing }{ logical vector indicating missing values}
-}
-
-\code{as.matrix} summarizes the \link{\code{Performance}} object
-within each level of the Bin object. As such, the summarization process must
-be described by implementing a summarize method for the Performance object.
 }
 \section{Fields}{
 
@@ -128,7 +26,6 @@ operation on the \code{Bin} object.}
 
 \item{\code{args}}{saved arguments that were used to call the bin method.}
 }}
-
 \section{Methods}{
 
 \describe{
@@ -137,8 +34,3 @@ operation on the \code{Bin} object.}
 \item{\code{factorize(newdata = .self$x)}}{Return list of filters for exceptions, missing, and normal values}
 }}
 
-\seealso{
-Continuous_collapse Discrete_collapse
-
-Continuous_expand Discrete_expand
-}

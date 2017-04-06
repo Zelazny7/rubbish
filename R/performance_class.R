@@ -4,9 +4,9 @@ setClassUnion("NumericOrFactor", members = c("numeric", "factor"))
 
 setGeneric("bin_", def = function(.self, b, ...) callGeneric("bin_"))
 
+#' @title Performnace reference class generator
+#'
 #' @name Performance_Class
-#' @rdname Performance_Class
-#' @description Bin object generator class used to wrap binned variables.
 #' @field y numeric or factor response variable
 #' @field w numeric weight variable
 #' @export Performance

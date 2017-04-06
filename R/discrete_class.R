@@ -17,7 +17,6 @@ Discrete$methods(initialize = function(x, ...) {
 #' Collapse levels of a Discrete bin object
 #'
 #' @name Discrete_collapse
-#' @rdname Discrete_Class
 #' @param i numeric vector of bin levels to collapse. Do not have to be
 #' adjacent.
 #' @return modifies the transform object in place.
@@ -32,7 +31,6 @@ Discrete$methods(collapse = function(i) {
 #' Expand a level of a Discrete bin into multiple new levels
 #'
 #' @name Discrete_expand
-#' @rdname Discrete_Class
 #' @param i numeric vector of length 1 indiicating bin level to expand.
 #' @details All of the collapsed levels will be expanded.
 #' @return modifies the transform object in place.
@@ -43,11 +41,9 @@ Discrete$methods(expand = function(i) {
   callSuper()
 })
 
-
-#' Preprocess transform object for summarization
+#' Factorize for Discrete bins
 #'
 #' @name Discrete_factorize
-#' @rdname Discrete_Class
 #' @param newdata Factor vector on which to apply the transformation. Defaults
 #' to the \code{x} field of the Discrete object
 #' @details \code{factorize} returns a list with two fields:
@@ -69,10 +65,9 @@ Discrete$methods(factorize = function(newdata=.self$x) {
 })
 
 
-#' Substitute summarized performance values for numeric inputs
+#' Weight-of-Evidence subistitution for Discrete bins
 #'
 #' @name Discrete_predict
-#' @rdname Discrete_Class
 #' @param newdata Factor vector to apply performance substition. Defaults to
 #' data used to create the Discrete object.
 #' @return numeric variable with bin performance values substituted for
@@ -87,7 +82,6 @@ Discrete$methods(predict = function(newdata=.self$x) {
 #' Generate SAS code for Discrete object
 #'
 #' @name Discrete_gen_code_sas
-#' @rdname Discrete_Class
 #' @description generate SAS code representing the transformation from input
 #' numeric values to the substituted performance values. Also generates code
 #' calculating difference from min/max/neutral and adverse action code

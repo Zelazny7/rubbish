@@ -2,8 +2,9 @@
 
 setClassUnion("NumericOrFactor", members = c("numeric", "factor"))
 
+#' Bin reference class generator
+#'
 #' @name Bin_Class
-#' @rdname Bin_Class
 #' @description Bin object generator class used to wrap binned variables.
 #' @field x numeric or factor vector to be discretized or summarized
 #' @field name name of the variable
@@ -37,7 +38,6 @@ Bin$methods(initialize = function(name="Unknown", x, perf, ...) {
 #' Update the Bin object after performing requested operations
 #'
 #' @name Bin_update
-#' @rdname Bin_Class
 #' @description The update method is called any time the user makes changes to
 #' the Bin object. The transform object is changed and the history list is
 #' updated.
@@ -66,7 +66,6 @@ Bin$methods(update = function() {
 #' Discretize and summarize variables
 #'
 #' @name Bin_bin
-#' @rdname Bin_Class
 #' @description The bin function is the entry point for discretizing and
 #' summarizing variables by some arbitray performance metric. Each Performance
 #' object must implement a bin method for numeric and factor variables.
@@ -85,7 +84,6 @@ Bin$methods(bin = function(...) {
 #' Collapse levels of a Bin object
 #'
 #' @name Bin_collapse
-#' @rdname Bin_Class
 #' @param i numeric vector of bin levels to collapse.
 #' @seealso Continuous_collapse Discrete_collapse
 #' @return modifies the transform object in place.
@@ -98,7 +96,6 @@ Bin$methods(collapse = function() {
 #' Expand a level of a Bin into multiple new levels
 #'
 #' @name Bin_expand
-#' @rdname Bin_Class
 #' @param i numeric vector of length 1 indiicating bin level to expand.
 #' @details All of the collapsed levels will be expanded.
 #' @seealso Continuous_expand Discrete_expand
@@ -110,10 +107,9 @@ Bin$methods(expand = function(...) {
 })
 
 
-#' Preprocess transform object for summarization
+#' Factrorize superclass method
 #'
 #' @name Bin_factorize
-#' @rdname Bin_Class
 #' @param newdata vector on which to apply the transformation. Defaults to the
 #' \code{x} field of the Bin object
 #' @details \code{factorize} returns a list with three fields:
@@ -136,7 +132,6 @@ Bin$methods(factorize = function(newdata=.self$x) {
 #' Return matrix summarizing Bin object
 #'
 #' @name Bin_as.matrix
-#' @rdname Bin_Class
 #' @details \code{as.matrix} summarizes the \link{\code{Performance}} object
 #' within each level of the Bin object. As such, the summarization process must
 #' be described by implementing a summarize method for the Performance object.
@@ -155,7 +150,6 @@ Bin$methods(as.matrix = function() {
 #' Print representation of Bin object
 #'
 #' @name Bin_show
-#' @rdname Bin_Class
 #' @param ... optional arguments passed on to the \link{\code{print}} function.
 NULL
 Bin$methods(show = function(...) {
@@ -177,7 +171,6 @@ Bin$methods(show = function(...) {
 #' Undo the last operation
 #'
 #' @name Bin_undo
-#' @rdname Bin_Class
 NULL
 Bin$methods(undo = function() {
   if (length(history) > 1) {
@@ -194,7 +187,6 @@ Bin$methods(undo = function() {
 #' Reset the Bin to the original settings
 #'
 #' @name Bin_reset
-#' @rdname Bin_Class
 #' @description \code{reset} re-bins the object using the \code{args} that were
 #' saved during the first call to \code{bin}.
 NULL
@@ -208,7 +200,6 @@ Bin$methods(reset = function() {
 #' Set one level equal to another
 #'
 #' @name Bin_set_equal
-#' @rdname Bin_Class
 #' @param i1 index of target bin
 #' @param i2 index of source bin
 #' @description \code{set_equal} sets the performance summary value of \code{i1}
@@ -224,7 +215,6 @@ Bin$methods(set_equal = function(i1, i2) {
 #' Set performance value to zero
 #'
 #' @name Bin_neutralize
-#' @rdname Bin_Class
 #' @param i numeric vector of bin indices to neutralize.
 #' @description \code{neutralize} sets the performance substitution value of
 #' the requested indices to zero. This has the effect of neither adding nor
@@ -239,7 +229,6 @@ Bin$methods(neutralize = function(i) {
 #' Plot the Bin object
 #'
 #' @name Bin_plot
-#' @rdname Bin_Class
 NULL
 Bin$methods(plot = function() {
   perf$plot(b = .self)
@@ -249,7 +238,6 @@ Bin$methods(plot = function() {
 #' Substitute weight-of-evidence for the input \code{x} values
 #'
 #' @name Bin_predict
-#' @rdname Bin_Class
 #' @param newdata vector of the same type as \code{x} for which to substitute
 #' the bin weight-of-evidence values.
 NULL
@@ -268,7 +256,6 @@ Bin$methods(predict = function(newdata=.self$x) {
 #' Access and return the sort value for the performance object
 #'
 #' @name Bin_sort_value
-#' @rdname Bin_Class
 NULL
 Bin$methods(sort_value = function() {
   perf$sort_value(b=.self)
@@ -278,7 +265,6 @@ Bin$methods(sort_value = function() {
 #' Return summary information for Bin based on associated performance object
 #'
 #' @name Bin_summary
-#' @rdname Bin_Class
 NULL
 Bin$methods(summary = function(tf=.self$tf) {
   perf$summary(tf = tf)

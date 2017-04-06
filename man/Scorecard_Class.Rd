@@ -2,18 +2,12 @@
 % Please edit documentation in R/scorecard_class.R
 \docType{class}
 \name{Scorecard_Class}
-\alias{Scorecard_Class}
 \alias{Scorecard}
-\alias{Scorecard_select}
-\title{Select a fitted model and load the Transforms}
+\alias{Scorecard_Class}
+\title{Scorecard reference class generator}
 \description{
 Scorecard class that wraps a data.frame and prepares it for
 scorecard modeling.
-
-Select searches the model fitting history for the requested
-model. It then loads the associated transforms for the model variables into
-the current Scorevard object. Additionally it loads the dropped and inmodel
-vectors at the time of the fit.
 }
 \section{Fields}{
 
@@ -28,5 +22,9 @@ transforms}
 \item{\code{inmodel}}{character vector of variable names that are in the selected
 model}
 }}
+\section{Methods}{
 
+\describe{
+\item{\code{add_model(mod)}}{Register a new Model object with the scorecard}
+}}
 

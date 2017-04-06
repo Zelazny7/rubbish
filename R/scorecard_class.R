@@ -1,8 +1,8 @@
 #' @include classing_class.R
 #' @include classing_adjust_method.R
 
+#' @title Scorecard reference class generator
 #' @name Scorecard_Class
-#' @rdname Scorecard_Class
 #' @description Scorecard class that wraps a data.frame and prepares it for
 #' scorecard modeling.
 #' @field seed saved random seed that is based on  \code{\link{Sys.time}}.
@@ -37,13 +37,12 @@ Scorecard$methods(has_model = function(model) {
 #' Select a fitted model and load the Transforms
 #'
 #' @name Scorecard_select
-#' @rdname Scorecard_Class
 #' @description Select searches the model fitting history for the requested
 #' model. It then loads the associated transforms for the model variables into
 #' the current Scorevard object. Additionally it loads the dropped and inmodel
 #' vectors at the time of the fit.
 NULL
-Scorecard$methods(select = function(model, ...) {
+Scorecard$methods(select = function(model) {
 
   has_model(model) ## check that model exists
   mod <- models[[model]]
@@ -58,31 +57,79 @@ Scorecard$methods(select = function(model, ...) {
 
 })
 
-Scorecard$methods(add_model = function(mod, ...) {
+
+Scorecard$methods(add_model = function(mod) {
+  "Register a new Model object with the scorecard"
   models[[mod@name]] <<- mod
   select(mod@name)
 })
 
+
+#' Subsequent call from the bin function
+#'
+#' @name Scorecard_bin
+#' @description This bin function should not be directly called by the user.
+#' The Scorecard bin function is subsequently called from the
+#' \link{\code{bin}} wrapper function.
+#' @return The scorecard is modified in place and a new model is registered
+NULL
 Scorecard$methods(bin = function(...) {
   callSuper(...)
-  HEAD <- new("Model", name="scratch", description="", fit=NULL, ks=0,
-              dropped=dropped, transforms=get_transforms())
-  add_model(HEAD)
+  scratch <- new("Model", name="scratch", description="", fit=NULL, ks=0,
+                 dropped=dropped, transforms=get_transforms())
+  add_model(scratch)
 })
 
 
-Scorecard$methods(fit = function(name, description="", newdata=.self$get_variables(),
-  y=performance$y, w=performance$w, nfolds=5, upper.limits=3, lower.limits=0,
-  alpha=1, family="binomial", ...) {
-
-  ## check names of newdata here... TODO
+#' Fit a model to the current set of variable transforms
+#'
+#' @name Scorecard_fit
+#' @description fits a regularized regressoion model using the glmnet
+#' package.
+#' @details the fit function first calls predict and substitutes the
+#' weight-of-evidence for all predictor variables. It then passes this matrix
+#' on to \link{\code{cv.glmnet}}. The coefficients of a binner model fit
+#' are restricted to [0,3]. This ensures there are no sign flips in the
+#' model coefficients and that the relationships observed on margin are
+#' retained in the final model.
+#' \link{\code{bin}} wrapper function.
+#' @param name brief model name as character
+#' @param description character description describing the model
+#' @param overwrite should model be overwriiten if it already exists?
+#' @param newdata data.frame of independent variables. Default is to
+#' use the binned data.
+#' @param y target to fit the data to. Default is the y variable used
+#' for discretization.
+#' @param w optional weight variable
+#' @param nfolds number of k-folds with which to select the optimal
+#' lambda value
+#' @param upper.limits maximum value of fitted coefficients
+#' @param lower.limits minimimum value of fitted coefficients
+#' @param alpha type of regularization. Default is alpha == 1 for LASSO
+#' regression. Alpha of 0 is Ridge regression while anythin in between
+#' is the elastic net mixture.
+#' @param family response variable distribution. Default is "binomial".
+#' @param ... additional arguments passed on to cv.glmnet
+NULL
+Scorecard$methods(fit = function(name, description="", overwrite=FALSE,
+  newdata=.self$get_variables(), y=performance$y, w=performance$w,
+  nfolds=5, upper.limits=3, lower.limits=0, alpha=1,
+  family="binomial", ...) {
 
   ## check for consistent dimensions
-  stopifnot(length((newdata[[1]]) == length(y)) &&  (length(y) == length(w)))
+  if (length(newdata[[1]]) != length(y)) {
+    stop("newdata and y must be the same length", call. = FALSE)
+  }
 
-  if (name %in% names(models)) {
-    ans <- menu(c("Yes", "No"), title = "Model name already exists. Overwrite?")
-    if (ans == "No") break
+  if (length(y) == length(w)) {
+    stop("y and w must be the same length", call. = FALSE)
+  }
+
+  if (!overwrite) {
+    if (name %in% names(models)) {
+        stop("Model name already exists and overwrite=FALSE",
+             call. = FALSE)
+      }
   }
 
   v <- setdiff(vnames, dropped)
@@ -105,9 +152,9 @@ Scorecard$methods(fit = function(name, description="", newdata=.self$get_variabl
   ks <- ks_(this_fit$fit.preval[,which.min(this_fit$cvm)], y, w) # kfold
 
   ## store the last transforms
-  m <- new("Model", name=name, description=description, fit=this_fit,
-           dropped=dropped, transforms=get_transforms(), coefs=coefs,
-           inmodel=inmodel, contribution=contr, ks=ks)
+  m <- new("Model", name=name, description=description, dropped=dropped,
+           transforms=get_transforms(), coefs=coefs, inmodel=inmodel,
+           contribution=contr, ks=ks, fit=this_fit)
 
   add_model(m)
 
