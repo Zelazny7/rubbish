@@ -10,36 +10,36 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.path = "README-"
 )
-require(rubbish)
+require(binnr)
 data(titanic)
 levels(titanic$Embarked)[levels(titanic$Embarked) == ""] <- "C"
 ```
 
-# What is Rubbish?
+# What is binnr?
 
-`rubbish` is an R package that helps modelers build scorecards. Scorecard models
+`binnr` is an R package that helps modelers build scorecards. Scorecard models
 need to be more than predictive. Regulatory oversight often necessitates they be
 transparent as well. Model transparency is difficult to enforce in more
 predictive, non-linear methods such as neural networks, random forest, or
 gradient boosted decision trees. Often direct modeler intervention is required
 to ensure proper treatment is given for values of independent variables.
 
-`rubbish` attempts to solve these problems by providing interactive variable
+`binnr` attempts to solve these problems by providing interactive variable
 manipulation facilities giving the modeler total control over how variables
 are treated in scorecard models.
 
-## Installing rubbish
+## Installing binnr
 
-The easiest way to install `rubbish` is by using the `devtools` package:
+The easiest way to install `binnr` is by using the `devtools` package:
 
 ```{r, eval=FALSE}
 if (!require(devtools)) install.packages("devtools")
-devtools::install_github(repo="Zelazny7/rubbish")
+devtools::install_github(repo="Zelazny7/binnr")
 ```
 
-## Overview of rubbish
+## Overview of binnr
 
-`rubbish` is comprised of three main modeling steps: Bin, Fit, & Adjust. Each of
+`binnr` is comprised of three main modeling steps: Bin, Fit, & Adjust. Each of
 these steps are outlined in the following sections.
 
 ### Bin
@@ -61,7 +61,7 @@ mod <- bin(data=titanic[,-1], y=titanic$Survived)
 
 Calling the `bin` function returns a Scorecard object. The Scorecard object
 contains methods for manipulating and fitting the discretized variables, or
-"bins" in rubbish parlance. The Scorecard object maintains a list of bins as and
+"bins" in binnr parlance. The Scorecard object maintains a list of bins as and
 keeps track of the operations requested by the modelers. It also contains a list
 of fitted scorecard models that can be adjusted or reviewed. These capabilities
 will be expanded upon in later sections.
@@ -90,8 +90,8 @@ mod$variables$Pclass$plot()
 
 ### Fit
 
-The second step of scorecard developement using `rubbish` is fitting a model.
-`rubbish` uses the `glmnet` package under the hood to fit a regularized
+The second step of scorecard developement using `binnr` is fitting a model.
+`binnr` uses the `glmnet` package under the hood to fit a regularized
 regression model. The discretized variables have their observed performance
 values substituted for their actual input values to create a completely 
 continuous dataset.
@@ -127,7 +127,7 @@ head(pred)
 
 ### Adjust
 
-The most important functionality provided by `rubbish` is the manipulation of 
+The most important functionality provided by `binnr` is the manipulation of 
 bin objects.
 
 Bins can be collapsed:

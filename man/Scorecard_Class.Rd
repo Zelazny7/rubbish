@@ -2,8 +2,8 @@
 % Please edit documentation in R/scorecard_class.R
 \docType{class}
 \name{Scorecard_Class}
-\alias{Scorecard}
 \alias{Scorecard_Class}
+\alias{Scorecard}
 \title{Scorecard reference class generator}
 \description{
 Scorecard class that wraps a data.frame and prepares it for
@@ -22,9 +22,12 @@ transforms}
 \item{\code{inmodel}}{character vector of variable names that are in the selected
 model}
 }}
+
 \section{Methods}{
 
 \describe{
 \item{\code{add_model(mod)}}{Register a new Model object with the scorecard}
+
+\item{\code{has_model(model)}}{Assert whether the Scorecard contains the requested model}
 }}
 

@@ -1,5 +1,6 @@
+#' Transfrom reference class generator
+#'
 #' @name Transform_Class
-#' @rdname Transform_Class
 #' @description Transform object class definition. The Transform object controls
 #' how an independent variable is binned and manages missing values, exceptions,
 #' overrides, and weight-of-evidence substitution.
@@ -22,8 +23,8 @@ setClass("Transform", slots = c(
 
 
 #' Neutralize selected levels of Transform setting substitution to zero
+#'
 #' @name neutralize
-#' @rdname Transform_Class
 #' @param tf Transform object
 #' @param i numeric vector of levels to neutralize
 #' @return new Transform object with updated overrides
@@ -31,23 +32,20 @@ neutralize_ <- function(tf, i) {
   x <- c(names(tf@subst), tf@exceptions, names(tf@nas))
   if (!(all(i) %in% seq_along(x))) return(tf)
 
-  new_tf <- tf
-
   ## ones that are already neutralized are UN-neutralized
   neutral <- names(which(tf@overrides == 0))
   nix <- intersect(neutral, x[i])
 
   overrides <- setdiff(x[i], nix)
+  tf@overrides[overrides] <- 0
 
-  new_tf@overrides[overrides] <- 0
-
-  new_tf
+  tf
 }
 
 
 #' Set substitution of one level equal to substitution of another
+#'
 #' @name set_equal
-#' @rdname Transform_Class
 #' @param tf Transform object
 #' @param v1 level to override
 #' @param v2 value with which to override v1's substitution
@@ -57,20 +55,17 @@ set_equal_ <- function(tf, v1, v2) {
   x <- c(tf@subst, tf@exceptions, tf@nas)
   if (!(all(c(v1, v2)) %in% seq_along(x))) return(tf)
 
-  new_tf <- tf
-
   overrides <- setNames(x[v2], names(x)[v1])
+  tf@overrides[names(overrides)] <- overrides
 
-  new_tf@overrides[names(overrides)] <- overrides
-
-  new_tf
+  tf
 
 }
 
 
 #' Update Transform object with new information after Bin operations
+#'
 #' @name update_transform
-#' @rdname Transform_Class
 #' @param tf Transform object
 #' @param result list of summarized performane values for the updated Bin object
 #' @return new Transform object with updated subst, nas, exceptions, and repr

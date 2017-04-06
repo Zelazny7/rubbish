@@ -1,8 +1,6 @@
-### functions that map to the binnr2 equivalents
-
 #' @title bin
 #'
-#' @description The starting point for any rubbish scorecard. The bin function
+#' @description The starting point for any binnr scorecard. The bin function
 #' prepares variables for scorecard modeling by returning a
 #' \code{\link{Scorecard}} object that is easily manipulated.
 #'
@@ -27,7 +25,7 @@
 #' @param exceptions A numeric vector of values to be excluded from the
 #' discretization process.
 #'
-#' @details \code{bin} Is the workhorse of rubbish. Depending on the input
+#' @details \code{bin} Is the workhorse of binnr Depending on the input
 #' variable class type, it will behave differently. For numeric and integer
 #' variables it will discretize using information value. The returned object is
 #' of class \code{Continuous}. Factors are summarized and passed through as-is.
@@ -50,7 +48,7 @@ bin <- function(data, y, w=rep(1, length(y)), min.iv=0.001, min.cnt=25,
   ## only binary performance is supported currently
   perf <- Binary_Performance$new(y=y, w=w)
 
-  sc <- rubbish:::Scorecard$new(data=data, performance=perf)
+  sc <- Scorecard$new(data=data, performance=perf)
 
   sc$bin(min.iv=min.iv, min.cnt=min.cnt, min.res=min.res, mono=mono,
          max.bin=max.bin, exceptions=exceptions)

@@ -1,5 +1,13 @@
 #' @include performance_class.R continuous_class.R discrete_class.R
+NULL
 
+#' Bin reference class generator
+#'
+#' @name Binary_Performance_Class
+#' @description Binary_Performance object generator class that implements
+#' the Performance class methods
+#' @field ones sum of \code{y == 0}
+#' @field zeros sum of \code{y == 1}
 #' @export Binary_Performance
 #' @exportClass Binary_Performance
 Binary_Performance <- setRefClass("Binary_Performance", fields = c(
@@ -7,12 +15,16 @@ Binary_Performance <- setRefClass("Binary_Performance", fields = c(
   zeros = "numeric"),
   contains = "Performance")
 
+
 Binary_Performance$methods(initialize =  function(y=.self$y, ...) {
   callSuper(y=y, ...)
   ones <<- sum((y == 1) * w)
   zeros <<- sum((y == 0) * w)
 })
 
+
+#' @describeIn bin_ Bin a Continuous object using Binary_Performance
+#' @return modifies the Bin object in place
 setMethod("bin_",
   signature = c(.self="Binary_Performance", b="Continuous"),
   function(.self, b, min.iv=0.01, min.cnt=10, min.res=0,
@@ -28,6 +40,9 @@ setMethod("bin_",
 
   })
 
+
+#' @describeIn bin_ Bin a Discrete object using Binary_Performance
+#' @return modifies the Bin object in place
 setMethod("bin_",
   signature = c(.self="Binary_Performance", b="Discrete"),
   function(.self, b, exceptions=numeric(0), ...) {
@@ -37,8 +52,28 @@ setMethod("bin_",
     b$tf@exceptions <- setNames(rep(0, length(exceptions)), exceptions)
   })
 
+
+#' Subsequent call from the bin function passed to Binary_Performance object
+#'
+#' @name Binary_Performance_bin
+#' @description This bin function should not be directly called by the user.
+#' The Classing bin function is subsequently called from the
+#' \link{\code{bin}} wrapper function.
+NULL
 Binary_Performance$methods(bin = bin_)
 
+
+#' Summarize method implementation for Binary_Performance
+#'
+#' @name Binary_Performance_summarize
+#' @param x discretized independent variable as a factor
+#' @param y response variable
+#' @param w weight variable
+#' @description this function summarizes the relationship between the
+#' independent and response variables. The inherited Performance class demands
+#' that it be implemented.
+#' @return a matrix of summary information for every level in the factor x
+NULL
 Binary_Performance$methods(summarize = function(x, y, w) {
   N1 <- tapply((y == 1) * w, x, sum)
   N0 <- tapply((y == 0) * w, x, sum)
@@ -49,7 +84,6 @@ Binary_Performance$methods(summarize = function(x, y, w) {
   WoE <- log(P1 / P0)
   IV <- (P1 - P0) * WoE
 
-  #c("N", "#1", "#0", "%N","%1","%0","P(1)","WoE","IV", "Pred")
   res <- cbind(N = N, `#1` = N1, `#0` = N0, `%N` = N / sum(ones, zeros),
     `%1` = N1 / ones, `%0` = N0 / zeros, `P(1)` = N1 / N,
     WoE = WoE, IV = IV, Pred = WoE)
@@ -59,6 +93,16 @@ Binary_Performance$methods(summarize = function(x, y, w) {
 
 })
 
+
+#' Update method implementation for Binary_Performance
+#'
+#' @name Binary_Performance_update
+#' @param b Bin object to update
+#' @description update is called after every applicable bin operation that
+#' modifies the Transform object. The result of calling update is used for
+#' displaying the Bin matrix as well as plotting the Bin object.
+#' @return a list of matrices with summarized information.
+NULL
 Binary_Performance$methods(update = function(b, ...) {
     info <- b$factorize()
 
@@ -81,6 +125,7 @@ Binary_Performance$methods(update = function(b, ...) {
 
   })
 
+# internal helper function for plotting
 make_bars_ <- function(v, width=0.70, ...) {
   left <- pmin(v, 0)
   right <- pmax(v, 0)
@@ -91,6 +136,17 @@ make_bars_ <- function(v, width=0.70, ...) {
   center
 }
 
+#' Plot method implementation for Binary_Performance
+#'
+#' @name Binary_Performance_plot
+#' @param b Bin object to update
+#' @description plot displays a horizontal bar chart showing summarized
+#' performance information. The large bars represent the observed WoE within
+#' each bin. The smaller bars within represent the WoE that will be substituted
+#' during prediction. Record count percentages are shown on the right side of
+#' the plot while a sequential index used for referencing bin levels is printed
+#' along the left.
+NULL
 Binary_Performance$methods(plot = function(b, ...) {
 
     on.exit(par(oma=rep(0, 4))) # restore them on exit
@@ -127,6 +183,13 @@ Binary_Performance$methods(plot = function(b, ...) {
   })
 
 
+#' Summary method implementation for Binary_Performance
+#'
+#' @name Binary_Performance_summary
+#' @param tf Transform object to summarize
+#' @description summary returns the appropriate pieces from the Transform object
+#' to summarize the relationship in a conciese one-line entry.
+#' @return a name vector of summary information
 Binary_Performance$methods(summary = function(tf, ...) {
   ## return the information value of the bin
   tot <- tf@repr$Total[,c("IV", "N", "#1", "#0", "P(1)")]
@@ -139,6 +202,13 @@ Binary_Performance$methods(summary = function(tf, ...) {
 
 })
 
+
+#' Sort_value method implementation for Binary_Performance
+#'
+#' @name Binary_Performance_sort_value
+#' @param b Bin object to update
+#' @description sort_value returns the information value for the requested Bin
+#' @return the value to use for sorting bins using Binary_Performance
 Binary_Performance$methods(sort_value = function(b, ...) {
   b$tf@repr$Total[,"IV"]
 })

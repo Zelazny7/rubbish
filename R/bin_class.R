@@ -1,4 +1,5 @@
 #' @include performance_class.R transform_class.R
+NULL
 
 setClassUnion("NumericOrFactor", members = c("numeric", "factor"))
 

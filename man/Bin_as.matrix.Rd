@@ -14,4 +14,3 @@ Return matrix summarizing Bin object
 within each level of the Bin object. As such, the summarization process must
 be described by implementing a summarize method for the Performance object.
 }
-

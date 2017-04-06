@@ -1,5 +1,5 @@
-#' @include classing_class.R
-#' @include classing_adjust_method.R
+#' @include classing_class.R classing_adjust_method.R
+NULL
 
 #' @title Scorecard reference class generator
 #' @name Scorecard_Class
@@ -28,6 +28,7 @@ Scorecard$methods(initialize = function(..., seed=as.numeric(strftime(Sys.time()
 
 
 Scorecard$methods(has_model = function(model) {
+  "Assert whether the Scorecard contains the requested model"
   if (!model %in% names(models)) {
     stop("Requested model not found: ", model, call. = FALSE)
   }
@@ -65,13 +66,12 @@ Scorecard$methods(add_model = function(mod) {
 })
 
 
-#' Subsequent call from the bin function
+#' Subsequent call from the bin function passed to the Scorecard
 #'
 #' @name Scorecard_bin
 #' @description This bin function should not be directly called by the user.
 #' The Scorecard bin function is subsequently called from the
 #' \link{\code{bin}} wrapper function.
-#' @return The scorecard is modified in place and a new model is registered
 NULL
 Scorecard$methods(bin = function(...) {
   callSuper(...)
@@ -121,7 +121,7 @@ Scorecard$methods(fit = function(name, description="", overwrite=FALSE,
     stop("newdata and y must be the same length", call. = FALSE)
   }
 
-  if (length(y) == length(w)) {
+  if (length(y) != length(w)) {
     stop("y and w must be the same length", call. = FALSE)
   }
 
@@ -160,6 +160,11 @@ Scorecard$methods(fit = function(name, description="", overwrite=FALSE,
 
 })
 
+
+#' Print the Scorecard representation to the console
+#'
+#' @name Scorecard_show
+NULL
 Scorecard$methods(show = function(...) {
   ## show the models / coefs?
   cat(sprintf("%d models", length(models)), sep="\n")
@@ -171,6 +176,18 @@ Scorecard$methods(show = function(...) {
               sapply(models, slot, "description")), sep="\n")
 })
 
+
+#' Return scorecard predictions or WoE substitution
+#'
+#' @name Scorecard_predict
+#' @param newdata data.frame on which to calculate predictions
+#' @param keep whether to keep dropped values
+#' @param type "score" to return the model score. "woe" to return the WoE
+#' substitution for the input dataset
+#' @return Either a single column matrix of score predictions or a matrix
+#' matching the input dimension of the dataset containing weight-of-evidence
+#' substitutions.
+NULL
 Scorecard$methods(predict = function(newdata=NULL, keep=FALSE, type="score", ...) {
 
   woe <- callSuper(newdata=newdata, keep=keep)
@@ -183,14 +200,22 @@ Scorecard$methods(predict = function(newdata=NULL, keep=FALSE, type="score", ...
   woe[,v] %*% mod@coefs[v] + mod@coefs[1]
 })
 
-## show summary for selected model
-Scorecard$methods(summary = function(...) {
+
+#' Summarize the currently selected model
+#'
+#' @name Scorecard_summary
+#' @param keep whether to summarize droppped variables as well
+#' @return a matrix summarizing the independent variables using the performance
+#' implementation summary function. Also displays the coefficients and model
+#' contributions of the predictors.
+NULL
+Scorecard$methods(summary = function(keep=FALSE) {
 
   mod <- models[[selected_model]]
 
   cat(mod@name, "\nOut-of-Fold KS: ", mod@ks, "\n")
 
-  res <- callSuper(tfs = get_transforms(keep=TRUE))
+  res <- callSuper(tfs = get_transforms(keep=keep))
   vars <- row.names(res)
 
 
@@ -201,11 +226,26 @@ Scorecard$methods(summary = function(...) {
   out
 })
 
+
+#' Scorecard adjust method entry point
+#'
+#' @name Scorecard_adjust
+#' @details calling adjust enters an interactive variable edit mode. Press "h"
+#' for a list of commands.
+NULL
 Scorecard$methods(adjust = function(...) {
   callSuper(...)
 })
 
-Scorecard$methods(sort = function(...) {
+
+#' Sort variables of a scorecard
+#'
+#' @name Scorecard_sort
+#' @details variables that are in the currently selected model are sorted to the
+#' front while dropped variables are sorted to the end. Variables within each
+#' group are sort by descending information value.
+NULL
+Scorecard$methods(sort = function() {
 
   v <- setNames(sapply(variables, function(x) x$sort_value()), names(variables))
 
@@ -221,6 +261,13 @@ Scorecard$methods(sort = function(...) {
 
 })
 
+
+#' Scorecard adjust method entry point
+#'
+#' @name Scorecard_adjust
+#' @details calling adjust enters an interactive variable edit mode. Press "h"
+#' for a list of commands.
+NULL
 Scorecard$methods(pseudo_pvalues = function(times=20, bag.fraction = 0.50,
   replace=FALSE,  nfolds=5, upper.limits=3, lower.limits=0, alpha=1, ...) {
 
@@ -251,6 +298,13 @@ Scorecard$methods(pseudo_pvalues = function(times=20, bag.fraction = 0.50,
     class = "psuedo_pvalues")
 })
 
+
+#' Compare multiple scorecards side-by-side
+#'
+#' @name Scorecard_compare
+#' @details calling adjust enters an interactive variable edit mode. Press "h"
+#' for a list of commands.
+NULL
 Scorecard$methods(compare = function(...) {
   mods <- unlist(list(...))
 
@@ -291,11 +345,29 @@ Scorecard$methods(compare = function(...) {
 })
 
 
+#' Generate SAS code for Scorecard object
+#'
+#' @name Scorecard_gen_code_sas
+#' @description generate SAS code represenation of the Scorecard object. The SAS
+#' code that is genereated calculates the score, adverse action code distances,
+#' and provides a set of macro assignments for assigning adverse action codes
+#' to particular bin levels.
+#' @param pfx character prefix to prepend to variable names
+#' by the Scorecard model object. Defaults to 1.
+#' @param method method used for calculating the reference level for adverse
+#' action codes. Three possible choices:
+#' \itemize{
+#'  \item{"min" }{Calculate difference from minimum of perf values - default}
+#'  \item{"max" }{Calculate difference from maximum of perf values}
+#'  \item{"neutral" }{Calculate difference from zero}#'
+#'  }
+#' @return a character vector of SAS code
+NULL
 Scorecard$methods(gen_code_sas = function(pfx="", method="min", ...) {
 
+  v <- inmodel
   mod <- models[[selected_model]]
 
-  v <- names(which(mod@inmodel))
   coefs <- mod@coefs[-1][v]
 
   ## Print the reason code mappings
@@ -320,13 +392,21 @@ Scorecard$methods(gen_code_sas = function(pfx="", method="min", ...) {
 })
 
 
+#' Return names of varibales flagged as dropped
+#'
+#' @name Scorecard_get_dropped
+#' @return a character vector of dropped variable names
+NULL
 Scorecard$methods(get_dropped = function(invert=FALSE) {
   if (invert) setdiff(vnames, dropped) else dropped
 })
 
+
+#' Return names of varibales flagged as inmodel
+#'
+#' @name Scorecard_get_inmodel
+#' @return a character vector of inmodel variable names
+NULL
 Scorecard$methods(get_inmodel = function(invert=FALSE) {
   if (invert) setdiff(vnames, inmodel) else inmodel
 })
-
-
-

@@ -9,4 +9,3 @@
 \description{
 Print representation of Bin object
 }
-

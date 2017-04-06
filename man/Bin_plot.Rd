@@ -6,4 +6,3 @@
 \description{
 Plot the Bin object
 }
-
