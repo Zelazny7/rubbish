@@ -54,14 +54,13 @@ Discrete$methods(expand = function(i) {
 #' @return \code{list} with two fields. See details.
 NULL
 Discrete$methods(factorize = function(newdata=.self$x) {
-  f <- callSuper(newdata)
 
   out <- newdata
   levels(out) <- unlist(tf@tf)[levels(out)]
   out <- addNA(out)
   levels(out)[is.na(levels(out))] <- "Missing"
 
-  list(factor=out, types=f)
+  out
 })
 
 

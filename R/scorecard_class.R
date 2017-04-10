@@ -121,7 +121,7 @@ Scorecard$methods(fit = function(name, description="", overwrite=FALSE,
     stop("newdata and y must be the same length", call. = FALSE)
   }
 
-  if (length(y) == length(w)) {
+  if (length(y) != length(w)) {
     stop("y and w must be the same length", call. = FALSE)
   }
 
