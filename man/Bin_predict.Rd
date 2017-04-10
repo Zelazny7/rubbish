@@ -10,4 +10,3 @@ the bin weight-of-evidence values.}
 \description{
 Substitute weight-of-evidence for the input \code{x} values
 }
-

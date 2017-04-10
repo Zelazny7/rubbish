@@ -14,4 +14,3 @@ the inputs.
 \description{
 Weight-of-Evidence subistitution for Continuous bins
 }
-

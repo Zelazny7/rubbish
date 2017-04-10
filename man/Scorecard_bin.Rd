@@ -2,13 +2,9 @@
 % Please edit documentation in R/scorecard_class.R
 \name{Scorecard_bin}
 \alias{Scorecard_bin}
-\title{Subsequent call from the bin function}
-\value{
-The scorecard is modified in place and a new model is registered
-}
+\title{Subsequent call from the bin function passed to the Scorecard}
 \description{
 This bin function should not be directly called by the user.
 The Scorecard bin function is subsequently called from the
 \link{\code{bin}} wrapper function.
 }
-

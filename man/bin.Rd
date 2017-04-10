@@ -46,7 +46,7 @@ prepares variables for scorecard modeling by returning a
 \code{\link{Scorecard}} object that is easily manipulated.
 }
 \details{
-\code{bin} Is the workhorse of rubbish. Depending on the input
+\code{bin} Is the workhorse of binnr Depending on the input
 variable class type, it will behave differently. For numeric and integer
 variables it will discretize using information value. The returned object is
 of class \code{Continuous}. Factors are summarized and passed through as-is.
@@ -61,4 +61,3 @@ may be collapsed.
 Missing values are always held out of binning. They may be combined only if
 the variable was binned as discrete.
 }
-

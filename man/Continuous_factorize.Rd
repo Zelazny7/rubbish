@@ -20,4 +20,3 @@ Factorize for Continuous bins
  \item{types }{ list of logical vectors for missing, exception, and normal}
 }
 }
-

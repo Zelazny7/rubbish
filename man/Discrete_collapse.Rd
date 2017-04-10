@@ -13,4 +13,3 @@ modifies the transform object in place.
 \description{
 Collapse levels of a Discrete bin object
 }
-

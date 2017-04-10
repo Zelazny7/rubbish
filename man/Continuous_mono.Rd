@@ -17,4 +17,3 @@ The possible values are:
  \item{2 }{ Either increasing or decreasing montonically with the \code{y}}
 }
 }
-

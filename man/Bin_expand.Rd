@@ -18,4 +18,3 @@ All of the collapsed levels will be expanded.
 \seealso{
 Continuous_expand Discrete_expand
 }
-

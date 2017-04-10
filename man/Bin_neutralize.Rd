@@ -11,4 +11,3 @@
 the requested indices to zero. This has the effect of neither adding nor
 subtracting points in the final score.
 }
-

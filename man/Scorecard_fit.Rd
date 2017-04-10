@@ -8,6 +8,8 @@
 
 \item{description}{character description describing the model}
 
+\item{overwrite}{should model be overwriiten if it already exists?}
+
 \item{newdata}{data.frame of independent variables. Default is to
 use the binned data.}
 
@@ -44,4 +46,3 @@ model coefficients and that the relationships observed on margin are
 retained in the final model.
 \link{\code{bin}} wrapper function.
 }
-

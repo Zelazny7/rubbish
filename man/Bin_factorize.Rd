@@ -21,4 +21,3 @@ Factrorize superclass method
  \item{missing }{ logical vector indicating missing values}
 }
 }
-

@@ -1,5 +1,33 @@
 #' @include classing_class.R
+NULL
 
+#' adjust method for Classing objects
+#'
+#' @name Classing_adjust
+#' @description The adjust method starts an interactive loop where users may
+#' enter commands representing various bin operations. The loop starts with
+#' the first variable in the Scorecard object. The interactive session continues
+#' until the user submits the quit command or the last variable is navigated
+#' past.
+#' @details The list of commands is rather extensive and summarized here:
+#' \itemize{
+#'  \item{(Q)}{uit the interactive session}
+#'  \item{(n)}{ext variable in the list}
+#'  \item{(p)}{revious variable in the list}
+#'  \item{(g)}{oto variable entered by user when prompted}
+#'  \item{(m)}{ono - change the monotoncity of the variable}
+#'  \item{(e)}{xceptions - change the exception values of the variable}
+#'  \item{(s)}{et equal - set one WoE equal to another}
+#'  \item{(u)}{ndo the last entered operation}
+#'  \item{(r)}{eset the Bin object to its original state}
+#'  \item{(d)}{rop or undrop the current variable}
+#'  \item{(!= )}{Set requested bin levels to zero}
+#'  \item{(+ )}{Expand requested bin level. Only one level allowed.}
+#'  \item{(- )}{Collapse requested range of bins. Must be adjacent for
+#'  Continuous bins. Can be separate for Discrete Bins}
+#' }
+#' @return all of the requested operations modify the bin in place
+NULL
 Classing$methods(adjust = function(...) {
   i <- 1
 
@@ -13,13 +41,13 @@ Classing$methods(adjust = function(...) {
       nm %in% inmodel, nm %in% dropped), sep = "\n")
 
     variables[[i]]$plot()
-    cat ("\nEnter command (Q to quit):")
+    cat ("\nEnter command (Q to quit; h for help):")
     command <- readLines(n = 1)
     if (command == "Q") {
       break
     }  else if (command %in% c("h", "help")) {
       cat(
-        "rubbish interactive commands:
+        "binnr interactive commands:
         (Q)uit
         (n)ext
         (p)revious

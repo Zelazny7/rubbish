@@ -1,4 +1,5 @@
 #' @include bin_class.R
+NULL
 
 #' @title Continuous reference class generator
 #'

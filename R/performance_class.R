@@ -1,7 +1,12 @@
 #' @include bin_class.R
+NULL
 
 setClassUnion("NumericOrFactor", members = c("numeric", "factor"))
 
+#' generic method for bin_
+#' @name bin_
+#' @param .self the Performance object calling bin_
+#' @param b a Bin object
 setGeneric("bin_", def = function(.self, b, ...) callGeneric("bin_"))
 
 #' @title Performnace reference class generator

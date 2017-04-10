@@ -2,8 +2,8 @@
 % Please edit documentation in R/bin_class.R
 \docType{class}
 \name{Bin_Class}
-\alias{Bin}
 \alias{Bin_Class}
+\alias{Bin}
 \title{Bin reference class generator}
 \description{
 Bin object generator class used to wrap binned variables.
@@ -26,6 +26,7 @@ operation on the \code{Bin} object.}
 
 \item{\code{args}}{saved arguments that were used to call the bin method.}
 }}
+
 \section{Methods}{
 
 \describe{

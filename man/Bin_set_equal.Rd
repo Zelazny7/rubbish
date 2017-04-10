@@ -13,4 +13,3 @@
 equal to that of \code{i2}. This can be used to force two bins to have the
 same substituted value.
 }
-

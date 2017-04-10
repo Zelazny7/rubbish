@@ -3,51 +3,11 @@
 \docType{class}
 \name{Transform_Class}
 \alias{Transform_Class}
-\alias{neutralize}
-\alias{neutralize_}
-\alias{set_equal}
-\alias{set_equal_}
-\alias{update_transform}
-\title{Neutralize selected levels of Transform setting substitution to zero}
-\usage{
-neutralize_(tf, i)
-
-set_equal_(tf, v1, v2)
-
-update_transform(tf, result)
-}
-\arguments{
-\item{tf}{Transform object}
-
-\item{i}{numeric vector of levels to neutralize}
-
-\item{v1}{level to override}
-
-\item{v2}{value with which to override v1's substitution}
-
-\item{result}{list of summarized performane values for the updated Bin object}
-
-\item{tf}{Transform object}
-
-\item{tf}{Transform object}
-}
-\value{
-new Transform object with updated overrides
-
-new Transform object with updated overrides
-
-new Transform object with updated subst, nas, exceptions, and repr
-}
+\title{Transfrom reference class generator}
 \description{
 Transform object class definition. The Transform object controls
 how an independent variable is binned and manages missing values, exceptions,
 overrides, and weight-of-evidence substitution.
-
-Neutralize selected levels of Transform setting substitution to zero
-
-Set substitution of one level equal to substitution of another
-
-Update Transform object with new information after Bin operations
 }
 \section{Slots}{
 

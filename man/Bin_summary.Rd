@@ -6,4 +6,3 @@
 \description{
 Return summary information for Bin based on associated performance object
 }
-
